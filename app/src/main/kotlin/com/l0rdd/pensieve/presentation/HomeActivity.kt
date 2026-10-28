@@ -24,12 +24,15 @@ import com.l0rdd.pensieve.presentation.views.common.FrameClock
 import com.l0rdd.pensieve.presentation.views.common.HomeView
 import com.l0rdd.pensieve.presentation.views.common.MenuOverlay
 import com.l0rdd.pensieve.presentation.views.common.MenuStyle
+import com.l0rdd.pensieve.presentation.views.common.NevaView
 import com.l0rdd.pensieve.presentation.views.common.Stage
+import com.l0rdd.pensieve.presentation.views.common.place
 import kotlinx.coroutines.launch
 
 /**
  * The home screen. It builds the view of the look in the state (rebuilt when the look changes),
  * shows each state on it, opens the menus, and runs the animations only while it is in front.
+ * Neva walks by on every look, under the menus.
  */
 class HomeActivity : ComponentActivity() {
     private val viewModel: HomeViewModel by viewModels { injectHome((application as PensieveApplication).scope) }
@@ -92,6 +95,7 @@ class HomeActivity : ComponentActivity() {
             layer.removeAllViews()
             home = views.create(wanted).execute().also {
                 layer.addView(it.root)
+                layer.place(NevaView(this, clock), 0, NevaView.FEET - NevaView.H, NevaView.W, NevaView.H)
                 it.render(state)
                 it.root.post { it.focusDefault() }
             }
