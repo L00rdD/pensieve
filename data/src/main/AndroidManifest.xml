@@ -13,5 +13,7 @@
         </intent>
         <package android:name="org.jellyfin.androidtv" />
         <package android:name="com.android.vending" />
+        <!-- JMGO's middleware, for the scenes -->
+        <package android:name="com.jmgo.hippo" />
     </queries>
 </manifest>

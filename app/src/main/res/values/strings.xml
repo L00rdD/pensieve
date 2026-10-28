@@ -31,6 +31,7 @@
 
     <!-- the quick panel (⚙) -->
     <string name="panel_title">Réglages rapides</string>
+    <string name="panel_scene">Pièce · %1$s</string>
     <string name="panel_settings">Tous les paramètres</string>
     <string name="panel_picture">Image</string>
     <string name="panel_keystone">Correction trapèze</string>

@@ -6,6 +6,7 @@ import com.l0rdd.pensieve.domain.repositories.ClockRepository
 import com.l0rdd.pensieve.domain.repositories.HouseRepository
 import com.l0rdd.pensieve.domain.repositories.LookRepository
 import com.l0rdd.pensieve.domain.repositories.ResumeRepository
+import com.l0rdd.pensieve.domain.repositories.SceneRepository
 import com.l0rdd.pensieve.domain.repositories.ShelfRepository
 import com.l0rdd.pensieve.domain.repositories.SystemRepository
 
@@ -19,4 +20,5 @@ class AppScope(
     val look: LookRepository,
     val clock: ClockRepository,
     val system: SystemRepository,
+    val scenes: SceneRepository,
 )

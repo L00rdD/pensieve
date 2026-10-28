@@ -2,6 +2,8 @@ package com.l0rdd.pensieve.dependency_injector
 
 import android.content.Context
 import com.l0rdd.pensieve.BuildConfig
+import com.l0rdd.pensieve.data.datasources.AndroidSystemSettingsDataSource
+import com.l0rdd.pensieve.data.datasources.BinderJmgoMiddlewareDataSource
 import com.l0rdd.pensieve.data.datasources.PackageManagerAppsDataSource
 import com.l0rdd.pensieve.data.datasources.SharedPreferencesDataSource
 import com.l0rdd.pensieve.data.datasources.UrlConnectionHttpDataSource
@@ -14,6 +16,7 @@ import com.l0rdd.pensieve.data.repositories.house.HubHouseRepository
 import com.l0rdd.pensieve.data.repositories.look.PreferencesLookRepository
 import com.l0rdd.pensieve.data.repositories.resume.FeedResumeRepository
 import com.l0rdd.pensieve.data.repositories.resume.HttpArtworkRepository
+import com.l0rdd.pensieve.data.repositories.scenes.JmgoSceneRepository
 import com.l0rdd.pensieve.data.repositories.system.AndroidSystemRepository
 import com.l0rdd.pensieve.data.repositories.time.SystemClockRepository
 
@@ -44,5 +47,6 @@ fun injectAppScope(context: Context): AppScope {
         look = PreferencesLookRepository(prefs),
         clock = SystemClockRepository(),
         system = AndroidSystemRepository(packages, QUICK_PANEL, app.packageName),
+        scenes = JmgoSceneRepository(AndroidSystemSettingsDataSource(app), BinderJmgoMiddlewareDataSource(app)),
     )
 }

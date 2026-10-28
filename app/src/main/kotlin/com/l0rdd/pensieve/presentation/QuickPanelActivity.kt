@@ -53,7 +53,9 @@ class QuickPanelActivity : ComponentActivity() {
     private fun entries(state: QuickPanelState, look: Look): List<PanelEntry> {
         val house = state.house
         val off = getString(R.string.unreachable)
-        return listOf(
+        return state.scenes.map { scene ->
+            PanelEntry(getString(R.string.panel_scene, scene.name), if (scene.current) "✓" else "") { viewModel.dispatch(QuickPanelEvent.ScenePicked(scene)) }
+        } + listOf(
             PanelEntry(getString(R.string.panel_settings), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.SETTINGS)) },
             PanelEntry(getString(R.string.panel_picture), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.PICTURE)) },
             PanelEntry(getString(R.string.panel_keystone), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.KEYSTONE)) },
