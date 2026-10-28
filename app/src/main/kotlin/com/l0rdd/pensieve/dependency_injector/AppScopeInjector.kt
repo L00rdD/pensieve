@@ -13,7 +13,7 @@ import com.l0rdd.pensieve.data.mappers.InstalledAppMapper
 import com.l0rdd.pensieve.data.repositories.apps.PackageManagerAppRepository
 import com.l0rdd.pensieve.data.repositories.apps.PreferencesShelfRepository
 import com.l0rdd.pensieve.data.repositories.house.HubHouseRepository
-import com.l0rdd.pensieve.data.repositories.look.PreferencesLookRepository
+import com.l0rdd.pensieve.data.repositories.look.FeedLookRepository
 import com.l0rdd.pensieve.data.repositories.resume.FeedResumeRepository
 import com.l0rdd.pensieve.data.repositories.resume.HttpArtworkRepository
 import com.l0rdd.pensieve.data.repositories.scenes.JmgoSceneRepository
@@ -44,7 +44,7 @@ fun injectAppScope(context: Context): AppScope {
         resume = FeedResumeRepository(http, packages, FeedResumeMapper(), BuildConfig.FEED_URL),
         artwork = HttpArtworkRepository(http, BuildConfig.JELLYFIN_URL),
         house = HubHouseRepository(http, HubStatusMapper(BuildConfig.CINEMA_OUTLETS.split(',').toSet(), SCREEN), BuildConfig.HUB_URL, SCREEN),
-        look = PreferencesLookRepository(prefs),
+        look = FeedLookRepository(http, prefs, BuildConfig.FEED_URL, BuildConfig.FEED_URL.substringBeforeLast('/') + "/screen/settings"),
         clock = SystemClockRepository(),
         system = AndroidSystemRepository(packages, QUICK_PANEL, app.packageName),
         scenes = JmgoSceneRepository(AndroidSystemSettingsDataSource(app), BinderJmgoMiddlewareDataSource(app)),
