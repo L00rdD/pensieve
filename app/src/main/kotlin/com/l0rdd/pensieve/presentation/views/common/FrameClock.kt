@@ -6,7 +6,7 @@ import android.view.Choreographer
  * Drives the looks' ambient animations at [fps] at most, on the display's frames, and stops
  * entirely when the home screen is not shown: an app in front costs nothing.
  */
-class FrameClock(private val fps: Int = 30) : Choreographer.FrameCallback {
+class FrameClock(private val fps: Int = 24) : Choreographer.FrameCallback {
     private val listeners = mutableListOf<(seconds: Float, dt: Float) -> Unit>()
     private var running = false
     private var start = 0L

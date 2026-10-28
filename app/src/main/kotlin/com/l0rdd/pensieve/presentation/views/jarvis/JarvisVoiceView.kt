@@ -20,9 +20,11 @@ class JarvisVoiceView(context: Context, fonts: Fonts, clock: FrameClock) : View(
 
     init {
         clock.add { time, dt ->
+            val blink = (time * 2).toInt() != (t * 2).toInt()
             t = time
-            if (typed < line.length) typed = minOf(line.length, typed + (dt * 70).toInt().coerceAtLeast(1))
-            invalidate()
+            val typing = typed < line.length
+            if (typing) typed = minOf(line.length, typed + (dt * 70).toInt().coerceAtLeast(1))
+            if (typing || blink) invalidate()
         }
     }
 

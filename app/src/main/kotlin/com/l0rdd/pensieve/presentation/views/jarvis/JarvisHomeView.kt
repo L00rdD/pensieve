@@ -49,7 +49,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
     private val status = text(fonts.rajdhaniSemi, 19f, JarvisColors.MUTED, 0.2f)
     private val target = text(fonts.rajdhaniSemi, 16f, JarvisColors.MUTED, 0.3f).apply { gravity = Gravity.CENTER }
     private val reactor = ReactorView(context, fonts, tools.clock, context.getString(R.string.jv_engraving))
-    private val restart = JarvisButton(context, fonts.rajdhaniBold, "↺ " + context.getString(R.string.restart).uppercase(), 16f)
+    private val restart = JarvisButton(context, fonts.rajdhaniBold, "↺ " + context.getString(R.string.restart).uppercase(), 15f)
     private val gear = JarvisButton(context, fonts.rajdhaniBold, "⚙ " + context.getString(R.string.settings).uppercase(), 17f)
     private val modules = List(6) { JarvisModuleView(context, fonts, tools.clock, left = it < 3) }
     private val callouts = List(6) { CalloutView(context, dotAtRight = it < 3) }
@@ -92,7 +92,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
 
         page.place(target, 460, 160, 1000, 30)
         page.place(reactor, 775, 252, 370, 370)
-        page.place(restart, 840, 664, 240, 40)
+        page.place(restart, 810, 664, 300, 40)
         val rows = listOf(196, 366, 536)
         modules.forEachIndexed { i, m ->
             val left = i < 3
@@ -153,7 +153,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
             return
         }
         val watched = resume.position.inWholeMinutes; val total = resume.runtime.inWholeMinutes
-        reactor.show(resume.title.uppercase(), "▶ " + context.getString(R.string.resume).uppercase(), "${FrenchTime.clock(watched)} / ${FrenchTime.clock(total)} · ${(resume.progress * 100).toInt()}%", resume.progress.toFloat())
+        reactor.show((resume.series ?: resume.title).uppercase(), "▶ " + context.getString(R.string.resume).uppercase(), "${FrenchTime.clock(watched)} / ${FrenchTime.clock(total)} · ${(resume.progress * 100).toInt()}%", resume.progress.toFloat())
         target.text = SpannableStringBuilder("CIBLE // ").apply {
             val start = length; append(listOfNotNull(resume.series, resume.title).joinToString(" · ").uppercase())
             setSpan(ForegroundColorSpan(JarvisColors.GOLD), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -228,7 +228,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         state.now?.let { pair("HOST", FrenchTime.hm(it)) }
     }
 
-    private fun subtitle(app: ShelvedApp) = if (app.isNew) context.getString(R.string.badge_new) else app.app.id.value.substringAfterLast('.')
+    private fun subtitle(app: ShelvedApp) = if (app.isNew) context.getString(R.string.badge_new) else ""
 
     private fun sayApp(app: ShelvedApp): Spanned = html(
         if (app.isNew) context.getString(R.string.jv_say_new, "<b>${TextUtils.htmlEncode(app.app.label)}</b>")
