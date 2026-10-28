@@ -65,7 +65,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
 
     init {
         root.addView(HelmetView(context), FrameLayout.LayoutParams(-1, -1))
-        root.addView(page, FrameLayout.LayoutParams(-1, -1))
+        root.addView(page, FrameLayout.LayoutParams(-1, 1260))
         // the page fades out under the top of the helmet when it moves up
         root.addView(object : View(context) {
             private val fade = Paint()
@@ -74,6 +74,14 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
                 canvas.drawRect(0f, 0f, width.toFloat(), 215f, fade)
             }
         }.also { it.alpha = 0f }, FrameLayout.LayoutParams(-1, 215))
+        // and below the strip, until the helmet looks down
+        root.addView(object : View(context) {
+            private val fade = Paint()
+            override fun onDraw(canvas: Canvas) {
+                fade.shader = LinearGradient(0f, 0f, 0f, 70f, 0, JarvisColors.BG, Shader.TileMode.CLAMP)
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), fade)
+            }
+        }, FrameLayout.LayoutParams(-1, 150).apply { topMargin = 930 })
         root.place(text(fonts.rajdhaniSemi, 16f, JarvisColors.MUTED, 0.35f).apply { text = context.getString(R.string.jv_company) }, 70, 40)
         root.place(text(fonts.michroma, 22f, JarvisColors.CYAN, 0.3f).apply { text = context.getString(R.string.jv_room); setShadowLayer(14f, 0f, 0f, JarvisColors.alpha(JarvisColors.CYAN, 0.5f)) }, 70, 64)
         root.place(status, 900, 42, 720, 40).also { status.gravity = Gravity.END }

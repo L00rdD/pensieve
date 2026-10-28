@@ -34,7 +34,7 @@ class JarvisSystemView(context: Context, fonts: Fonts) : View(context) {
             bar.color = JarvisColors.alpha(JarvisColors.CYAN, 0.15f); canvas.drawRect(22f, 60f, w - 22f, 66f, bar)
             bar.color = color; canvas.drawRect(22f, 60f, 22f + (w - 44f) * it, 66f, bar)
         }
-        canvas.drawText(detail.uppercase(), 22f, if (gauge != null) 96f else 74f, sub)
+        canvas.drawText(android.text.TextUtils.ellipsize(detail.uppercase(), android.text.TextPaint(sub), w - (if (gauge != null) 44f else 120f), android.text.TextUtils.TruncateAt.END).toString(), 22f, if (gauge != null) 96f else 74f, sub)
         canvas.drawText(status, 22f, h - 18f, state)
         big.color = color
         if (gauge == null) canvas.drawText(glyph, w - 50f, 92f, big)

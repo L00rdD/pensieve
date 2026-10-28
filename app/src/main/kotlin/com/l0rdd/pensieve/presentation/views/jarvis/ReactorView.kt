@@ -49,7 +49,10 @@ class ReactorView(context: Context, fonts: Fonts, clock: FrameClock, private val
         canvas.save(); canvas.rotate(t * 6f, c, cy)
         ring.reset(); ring.addCircle(c, cy, r * 1.08f, Path.Direction.CW)
         engrave.color = alpha(color, 0.75f)
-        canvas.drawTextOnPath(engraving, ring, 0f, 0f, engrave)
+        // repeated round the whole casing
+        val around = (2 * Math.PI * r * 1.08f).toFloat()
+        val once = engrave.measureText(engraving).coerceAtLeast(1f)
+        canvas.drawTextOnPath(engraving.repeat((around / once).toInt().coerceAtLeast(1)), ring, 0f, 0f, engrave)
         canvas.restore()
         // ticks
         canvas.save(); canvas.rotate(t * 4f, c, cy)
