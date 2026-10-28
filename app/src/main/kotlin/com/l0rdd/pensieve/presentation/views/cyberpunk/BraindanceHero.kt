@@ -41,7 +41,10 @@ class BraindanceHero(context: Context, private val fonts: Fonts, resumeText: Str
         private val bitmapPaint = Paint(Paint.FILTER_BITMAP_FLAG)
         private var resume: Resume? = null; private var poster: Bitmap? = null
 
-        fun show(resume: Resume?, poster: Bitmap?) { this.resume = resume; this.poster = poster; invalidate() }
+        fun show(resume: Resume?, poster: Bitmap?) {
+            if (resume == this.resume && poster == this.poster) return
+            this.resume = resume; this.poster = poster; invalidate()
+        }
 
         override fun onDraw(canvas: Canvas) {
             val w = width.toFloat(); val h = height.toFloat()
