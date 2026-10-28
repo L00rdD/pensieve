@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the launcher banner: a basin of silver light, the Pensieve -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp" android:viewportWidth="320" android:viewportHeight="180">
+    <path android:fillColor="#02070D" android:pathData="M0,0h320v180h-320z" />
+    <path android:fillColor="#0B2B3A" android:pathData="M70,92 a90,36 0 1,0 180,0 a90,36 0 1,0 -180,0z" />
+    <path android:strokeColor="#6FE3FF" android:strokeWidth="3" android:pathData="M70,92 a90,36 0 1,0 180,0 a90,36 0 1,0 -180,0z" />
+    <path android:strokeColor="#FFC857" android:strokeWidth="2" android:pathData="M100,92 a60,20 0 1,0 120,0" />
+    <path android:strokeColor="#BFF4FF" android:strokeWidth="1.5" android:pathData="M160,92 C150,70 175,58 160,30" />
+</vector>

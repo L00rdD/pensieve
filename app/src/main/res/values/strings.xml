@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pensieve</string>
+
+    <!-- shared -->
+    <string name="settings">Paramètres</string>
+    <string name="resume">Reprendre</string>
+    <string name="restart">Depuis le début</string>
+    <string name="favorites">Favoris</string>
+    <string name="favorites_hint">dans l\'ordre que tu choisis</string>
+    <string name="all_apps">Toutes les applis</string>
+    <string name="applications">Applications</string>
+    <string name="house">Maison</string>
+    <string name="cinema">Mode cinéma</string>
+    <string name="cinema_sub">lampes éteintes, écran en bas</string>
+    <string name="lights">Lumières</string>
+    <string name="screen">Écran</string>
+    <string name="screen_sub">projection</string>
+    <string name="screen_down">▼ BAS</string>
+    <string name="screen_up">▲ HAUT</string>
+    <string name="screen_moving">EN ROUTE</string>
+    <string name="unreachable">HORS LIGNE</string>
+    <string name="badge_new">NOUVEAU</string>
+    <string name="store">Play Store</string>
+    <string name="store_sub">Ajouter une appli</string>
+    <string name="nothing_to_resume">Rien à reprendre</string>
+    <string name="open_jellyfin">Ouvrir Jellyfin</string>
+    <string name="lights_on">%1$d / %2$d</string>
+
+    <!-- arranging an app (OK held) -->
+    <string name="arrange_pin">Mettre en favori</string>
+    <string name="arrange_unpin">Retirer des favoris</string>
+    <string name="arrange_earlier">Avancer</string>
+    <string name="arrange_later">Reculer</string>
+    <string name="arrange_hide">Masquer</string>
+    <string name="arrange_cancel">Annuler</string>
+    <string name="look_title">Look de l\'accueil</string>
+    <string name="look_jarvis">J.A.R.V.I.S.</string>
+    <string name="look_cyberpunk">Cyberpunk</string>
+    <string name="look_marauder">La Carte du Maraudeur</string>
+
+    <!-- hints at the bottom -->
+    <string name="hint_open"><b>OK</b> ouvrir · <b>OK long</b> favori, déplacer, masquer</string>
+    <string name="hint_resume"><b>OK</b> reprendre à %1$s</string>
+    <string name="hint_restart"><b>OK</b> depuis le début</string>
+    <string name="hint_settings"><b>OK</b> paramètres du projecteur · <b>OK long</b> changer de look</string>
+    <string name="hint_store"><b>OK</b> ouvrir le Play Store pour ajouter une appli</string>
+    <string name="hint_cinema"><b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer</string>
+    <string name="hint_outlet"><b>OK</b> allumer ou éteindre</string>
+    <string name="hint_screen"><b>OK</b> monter ou descendre l\'écran</string>
+
+    <!-- J.A.R.V.I.S. -->
+    <string name="jv_company">STARK INDUSTRIES // HOME</string>
+    <string name="jv_room">MEDIA ROOM</string>
+    <string name="jv_engraving">STARK INDUSTRIES · ARC REACTOR · JELLYFIN · MARK LXXXV · </string>
+    <string name="jv_target">CIBLE // %1$s</string>
+    <string name="jv_systems">SYSTÈMES // MAISON</string>
+    <string name="jv_more">▼ MAISON // %1$d SYSTÈMES</string>
+    <string name="jv_say_resume">Je reprends %1$s à %2$s, monsieur. Fin prévue à %3$s.</string>
+    <string name="jv_say_nothing">Aucune lecture en attente, monsieur.</string>
+    <string name="jv_say_app">%1$s, monsieur.</string>
+    <string name="jv_say_new">%1$s vient d\'être installée. Appui long pour la ranger.</string>
+    <string name="jv_say_cinema">Mode cinéma : j\'éteins le néon et je descends l\'écran.</string>
+    <string name="jv_say_outlet">%1$s est %2$s. OK pour basculer.</string>
+    <string name="jv_say_screen">L\'écran est %1$s. OK pour le déplacer.</string>
+    <string name="jv_say_settings">Les paramètres du projecteur, monsieur. Réglages JMGO compris.</string>
+    <string name="jv_say_store">Le Play Store, pour ajouter une application.</string>
+    <string name="on">allumé</string>
+    <string name="off">éteint</string>
+    <string name="down">baissé</string>
+    <string name="up">remonté</string>
+
+    <!-- Cyberpunk -->
+    <string name="cp_brand">NETWATCH//HOME</string>
+    <string name="cp_clock">NIGHT CITY · LOCAL</string>
+    <string name="cp_braindance">BRAINDANCE</string>
+    <string name="cp_neon">ナイトシティ</string>
+
+    <!-- the Marauder\'s Map -->
+    <string name="mm_title">La Carte du Maraudeur</string>
+    <string name="mm_oath">« Je jure solennellement que mes intentions sont mauvaises. »</string>
+    <string name="mm_gazette">La Gazette du Sorcier</string>
+    <string name="mm_special">Édition spéciale</string>
+    <string name="mm_inscription">JE MARQUE LES HEURES, UNE À UNE · ET JAMAIS NE DEVANCE LE SOLEIL · MON PRIX EST CE QUE TU EN FAIS ·</string>
+    <string name="mm_mischief">« Méfait accompli » : le néon s\'éteint, l\'écran descend</string>
+</resources>
