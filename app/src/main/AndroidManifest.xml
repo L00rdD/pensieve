@@ -30,5 +30,21 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- the remote's ⚙ key: SystemUI asks for the quick settings panel the Google TV home used
+             to answer; this answers it, from any app, with the projector's settings -->
+        <activity
+            android:name=".presentation.SettingsKeyActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.app.action.TOGGLE_NOTIFICATION_HANDLER_PANEL" />
+                <action android:name="android.app.action.OPEN_NOTIFICATION_HANDLER_PANEL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

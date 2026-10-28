@@ -1,6 +1,7 @@
 package com.l0rdd.pensieve.presentation
 
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
@@ -63,8 +64,23 @@ class HomeActivity : ComponentActivity() {
         if (shownMenu != null) viewModel.dispatch(HomeEvent.MenuClosed)
     }
 
+    /**
+     * The remote's own keys, which the Google TV home used to answer: ⚙ opens the settings, ≡ opens
+     * the menu of what has the focus (as OK held does).
+     */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_BACK && shownMenu == null) return true
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) Log.d(TAG, "key ${event.keyCode} ${KeyEvent.keyCodeToString(event.keyCode)}")
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_BACK -> if (shownMenu == null) return true
+            KeyEvent.KEYCODE_SETTINGS -> {
+                if (event.action == KeyEvent.ACTION_UP) viewModel.dispatch(HomeEvent.SettingsPicked)
+                return true
+            }
+            KeyEvent.KEYCODE_MENU -> {
+                if (event.action == KeyEvent.ACTION_UP && shownMenu == null) currentFocus?.let { if (it.isLongClickable) it.performLongClick() }
+                return true
+            }
+        }
         return super.dispatchKeyEvent(event)
     }
 
@@ -116,6 +132,8 @@ class HomeActivity : ComponentActivity() {
         overlay.tag = focused
     }
 }
+
+private const val TAG = "Pensieve"
 
 /** A home view that dresses its menus. */
 interface MenuStyled {

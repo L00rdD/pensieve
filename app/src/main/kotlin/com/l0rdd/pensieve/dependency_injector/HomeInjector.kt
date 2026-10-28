@@ -60,3 +60,6 @@ fun injectHome(scope: AppScope): ViewModelProvider.Factory = object : ViewModelP
 /** Builds the factory of the looks' home views, for an activity. */
 fun injectHomeViews(context: Context, clock: FrameClock, dispatch: (HomeEvent) -> Unit) =
     HomeViewStrategyFactory(HomeViewTools(context, Fonts(context), Bitmaps(), clock, dispatch))
+
+/** Builds what the ⚙ key needs: opening the settings. */
+fun injectSettingsKey(scope: AppScope): OpenSettings = OpenSettings(scope.system)
