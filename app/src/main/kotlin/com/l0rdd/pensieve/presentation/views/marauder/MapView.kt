@@ -28,6 +28,7 @@ class MapView(context: Context, private val italic: Typeface, clock: FrameClock)
     private val people = listOf("Rusard", "Miss Teigne", "Peeves", "Albus Dumbledore").map { Walker(it, random.nextFloat() * 1920, random.nextFloat() * 1080) }
     private var walk: List<FloatArray>? = null
     private var walkT = 0f
+    private var tick = 0f
 
     private inner class Walker(val name: String, var x: Float, var y: Float) {
         var tx = random.nextFloat() * 1920; var ty = random.nextFloat() * 1080; var d = 0f
@@ -43,7 +44,9 @@ class MapView(context: Context, private val italic: Typeface, clock: FrameClock)
                 if (p.d > 18) { p.d = 0f; p.trail.addLast(floatArrayOf(p.x, p.y, atan2(dy, dx), (p.trail.size % 2).toFloat())); if (p.trail.size > 10) p.trail.removeFirst() }
             }
             if (walk != null) { walkT += dt; if (walkT > 4.5f) walk = null }
-            invalidate()
+            // the walkers are slow: 8 redraws a second; footsteps get every frame while they walk
+            tick += dt
+            if (walk != null || tick >= 0.125f) { tick = 0f; invalidate() }
         }
     }
 

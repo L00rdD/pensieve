@@ -27,6 +27,10 @@ class TimeTurnerView(context: Context, private val face: Typeface, private val i
     private val engrave = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = face; textSize = 15.5f; letterSpacing = 0.1f; color = 0xFF4A2C0C.toInt() }
     private val hours = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = face; textAlign = Paint.Align.CENTER }
     private val ring = Path()
+    private val bitmapPaint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+    private var outer: android.graphics.Bitmap? = null
+    private val goldShader = LinearGradient(0f, 60f, 400f, 420f, intArrayOf(0xFFFFE7A3.toInt(), 0xFFB8862F.toInt(), 0xFFF6D27A.toInt(), 0xFF8F6220.toInt(), 0xFFE8B95A.toInt()), null, Shader.TileMode.CLAMP)
+    private val glowShader = RadialGradient(200f, 236f, 178f, InkColors.alpha(0xFFFFD27A.toInt(), 0.5f), 0, Shader.TileMode.CLAMP)
     private var t = 0f
     private var hour = 0; private var progress = 0f
 
@@ -41,19 +45,15 @@ class TimeTurnerView(context: Context, private val face: Typeface, private val i
         val s = width / 400f
         canvas.save(); canvas.scale(s, s)
         val cx = 200f; val cy = 236f
-        gold.shader = LinearGradient(0f, 60f, 400f, 420f, intArrayOf(0xFFFFE7A3.toInt(), 0xFFB8862F.toInt(), 0xFFF6D27A.toInt(), 0xFF8F6220.toInt(), 0xFFE8B95A.toInt()), null, Shader.TileMode.CLAMP)
+        gold.shader = goldShader
         // the chain
         gold.strokeWidth = 3f
         for (k in 0 until 6) canvas.drawOval(200f - (if (k % 2 == 1) 3f else 6f), 1f + k * 11f, 200f + (if (k % 2 == 1) 3f else 6f), 15f + k * 11f, gold)
-        fill.shader = RadialGradient(cx, cy, 178f, InkColors.alpha(0xFFFFD27A.toInt(), 0.5f), 0, Shader.TileMode.CLAMP)
+        fill.shader = glowShader
         canvas.drawCircle(cx, cy, 178f, fill); fill.shader = null
-        // the outer ring, engraved, turning
-        canvas.save(); canvas.rotate(t * 4f, cx, cy)
-        gold.strokeWidth = 26f; canvas.drawCircle(cx, cy, 166f, gold)
-        line.strokeWidth = 1.2f; canvas.drawCircle(cx, cy, 179f, line); canvas.drawCircle(cx, cy, 153f, line)
-        ring.reset(); ring.addCircle(cx, cy, 160f, Path.Direction.CW)
-        canvas.drawTextOnPath(inscription, ring, 0f, 0f, engrave)
-        canvas.restore()
+        // the outer ring, engraved, turning (drawn once into a bitmap)
+        val ringBitmap = outer ?: engravedRing().also { outer = it }
+        canvas.save(); canvas.rotate(t * 4f, cx, cy); canvas.drawBitmap(ringBitmap, cx - 182f, cy - 182f, bitmapPaint); canvas.restore()
         // the hours
         fill.color = InkColors.alpha(0xFF46280A.toInt(), 0.08f); canvas.drawCircle(cx, cy, 146f, fill)
         line.strokeWidth = 1f; canvas.drawCircle(cx, cy, 146f, line)
@@ -85,6 +85,19 @@ class TimeTurnerView(context: Context, private val face: Typeface, private val i
         var y = 236f + (t * 10 % 6); while (y < 313 - pile - 4) { canvas.drawRect(199.2f, y, 200.8f, y + 3, fill); y += 6f }
         gold.strokeWidth = 3f; canvas.drawLine(163f, 159f, 163f, 313f, gold); canvas.drawLine(237f, 159f, 237f, 313f, gold)
         canvas.restore()
+    }
+
+    /** The outer ring with its inscription, 364 × 364 around its centre. */
+    private fun engravedRing(): android.graphics.Bitmap {
+        val bmp = android.graphics.Bitmap.createBitmap(364, 364, android.graphics.Bitmap.Config.ARGB_8888)
+        Canvas(bmp).apply {
+            translate(182f - 200f, 182f - 236f)
+            gold.strokeWidth = 26f; drawCircle(200f, 236f, 166f, gold)
+            line.strokeWidth = 1.2f; drawCircle(200f, 236f, 179f, line); drawCircle(200f, 236f, 153f, line)
+            ring.reset(); ring.addCircle(200f, 236f, 160f, Path.Direction.CW)
+            drawTextOnPath(inscription, ring, 0f, 0f, engrave)
+        }
+        return bmp
     }
 
     private companion object {

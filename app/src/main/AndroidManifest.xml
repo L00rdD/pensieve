@@ -46,9 +46,11 @@
         </activity>
 
         <!-- the remote's ⚙ key: SystemUI only hands it to the Google TV home, which is disabled;
-             this service sees the key first, in any app, and opens the projector's settings -->
+             this service sees the key first, in any app, and opens the quick panel. It runs in its
+             own process: every key of the remote waits for it, never for the home screen's drawing -->
         <service
             android:name=".presentation.SettingsKeyService"
+            android:process=":keys"
             android:exported="false"
             android:label="@string/settings_key_service"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
