@@ -85,6 +85,8 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
         root.viewTreeObserver.addOnGlobalFocusChangeListener { _, focused ->
             focused ?: return@addOnGlobalFocusChangeListener
             hint.text = hints[focused]?.invoke() ?: ""
+            // a menu open over the page holds the focus outside it: no footsteps then
+            if (!focused.isDescendantOf(root)) { last = null; return@addOnGlobalFocusChangeListener }
             val rect = Rect().also { focused.getDrawingRect(it); root.offsetDescendantRectToMyCoords(focused, it) }
             skin.onFocusMove(last, rect)
             last = rect
@@ -161,4 +163,10 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
     }
 
     private fun html(text: String): CharSequence = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
+
+    private fun View.isDescendantOf(ancestor: View): Boolean {
+        var parent = parent
+        while (parent is View) { if (parent === ancestor) return true; parent = parent.parent }
+        return false
+    }
 }
