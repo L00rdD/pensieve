@@ -24,9 +24,14 @@ android {
     }
     buildTypes {
         release {
+            // R8 in full mode (gradle.properties) with the optimizing rules: code inlined and
+            // shrunk, resources dropped, no debugging hooks; the debug key, so it installs over
+            // the debug build and keeps the projector's preferences
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            isDebuggable = false
+            isJniDebuggable = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -40,6 +45,10 @@ android {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        // no null checks on parameters, calls and receivers at run time: the compiler already checked
+        freeCompilerArgs.addAll("-Xno-param-assertions", "-Xno-call-assertions", "-Xno-receiver-assertions")
+    }
 }
 
 dependencies {

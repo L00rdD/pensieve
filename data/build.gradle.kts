@@ -20,6 +20,10 @@ android {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        // no null checks on parameters, calls and receivers at run time: the compiler already checked
+        freeCompilerArgs.addAll("-Xno-param-assertions", "-Xno-call-assertions", "-Xno-receiver-assertions")
+    }
 }
 
 dependencies {
