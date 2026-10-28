@@ -2,6 +2,7 @@ package com.l0rdd.pensieve.presentation.state.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.l0rdd.pensieve.domain.entities.system.SystemScreen
 import com.l0rdd.pensieve.domain.usecases.NoParam
 import com.l0rdd.pensieve.domain.usecases.apps.MoveFavorite
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +63,7 @@ class HomeViewModel(private val useCases: HomeUseCases) : ViewModel() {
             HomeEvent.CinemaPicked -> useCases.toggleCinemaMode(state.house)
             is HomeEvent.OutletPicked -> useCases.toggleOutlet(event.outlet)
             HomeEvent.ScreenPicked -> state.house.screen?.let { useCases.toggleScreen(it) }
-            HomeEvent.SettingsPicked -> useCases.openSettings(NoParam)
+            HomeEvent.SettingsPicked -> useCases.openSystemScreen(SystemScreen.SETTINGS)
             HomeEvent.SettingsHeld -> _state.update { it.copy(menu = HomeMenu.PickLook) }
             is HomeEvent.LookPicked -> {
                 _state.update { it.copy(menu = null) }

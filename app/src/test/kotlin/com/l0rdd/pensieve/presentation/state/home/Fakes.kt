@@ -8,6 +8,7 @@ import com.l0rdd.pensieve.domain.entities.house.House
 import com.l0rdd.pensieve.domain.entities.house.OutletId
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.domain.entities.resume.Resume
+import com.l0rdd.pensieve.domain.entities.system.SystemScreen
 import com.l0rdd.pensieve.domain.repositories.AppRepository
 import com.l0rdd.pensieve.domain.repositories.ArtworkRepository
 import com.l0rdd.pensieve.domain.repositories.ClockRepository
@@ -62,6 +63,6 @@ class FakeClock(private val now: LocalDateTime) : ClockRepository {
 }
 
 class FakeSystem : SystemRepository {
-    var settings = 0
-    override suspend fun openSettings() { settings++ }
+    val opened = mutableListOf<SystemScreen>()
+    override suspend fun open(screen: SystemScreen) { opened += screen }
 }

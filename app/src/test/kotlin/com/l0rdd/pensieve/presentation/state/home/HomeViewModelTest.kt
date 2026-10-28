@@ -25,7 +25,7 @@ import com.l0rdd.pensieve.domain.usecases.resume.LoadArtwork
 import com.l0rdd.pensieve.domain.usecases.resume.ObserveResume
 import com.l0rdd.pensieve.domain.usecases.resume.RestartPlayback
 import com.l0rdd.pensieve.domain.usecases.resume.ResumePlayback
-import com.l0rdd.pensieve.domain.usecases.system.OpenSettings
+import com.l0rdd.pensieve.domain.usecases.system.OpenSystemScreen
 import com.l0rdd.pensieve.domain.usecases.time.ObserveTime
 import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.minutes
@@ -62,7 +62,7 @@ class HomeViewModelTest {
     private fun viewModel() = HomeViewModel(HomeUseCases(
         ObserveLook(look), ChangeLook(look), ObserveHomeApps(apps, shelf), LaunchApp(apps, shelf), PinFavorite(shelf), MoveFavorite(shelf),
         HideApp(shelf), MarkAppSeen(shelf), ObserveResume(resume), ResumePlayback(resume), RestartPlayback(resume), LoadArtwork(FakeArtwork()),
-        ObserveHouse(hub), ToggleOutlet(hub), ToggleScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSettings(system),
+        ObserveHouse(hub), ToggleOutlet(hub), ToggleScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSystemScreen(system),
     ))
 
     @Test
@@ -110,7 +110,7 @@ class HomeViewModelTest {
         val vm = viewModel()
         vm.dispatch(HomeEvent.SettingsPicked)
         vm.dispatch(HomeEvent.SettingsHeld)
-        assertEquals(1, system.settings)
+        assertEquals(listOf(com.l0rdd.pensieve.domain.entities.system.SystemScreen.SETTINGS), system.opened)
         assertEquals(HomeMenu.PickLook, vm.state.value.menu)
         vm.dispatch(HomeEvent.LookPicked(Look.MARAUDER))
         assertEquals(Look.MARAUDER, vm.state.value.look)

@@ -16,7 +16,7 @@ import com.l0rdd.pensieve.domain.usecases.resume.LoadArtwork
 import com.l0rdd.pensieve.domain.usecases.resume.ObserveResume
 import com.l0rdd.pensieve.domain.usecases.resume.RestartPlayback
 import com.l0rdd.pensieve.domain.usecases.resume.ResumePlayback
-import com.l0rdd.pensieve.domain.usecases.system.OpenSettings
+import com.l0rdd.pensieve.domain.usecases.system.OpenSystemScreen
 import com.l0rdd.pensieve.domain.usecases.time.ObserveTime
 
 /** Every use case the home screen calls. */
@@ -38,5 +38,5 @@ class HomeUseCases(
     val toggleScreen: ToggleScreen,
     val toggleCinemaMode: ToggleCinemaMode,
     val observeTime: ObserveTime,
-    val openSettings: OpenSettings,
+    val openSystemScreen: OpenSystemScreen,
 )

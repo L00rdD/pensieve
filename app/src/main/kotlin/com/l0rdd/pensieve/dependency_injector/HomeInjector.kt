@@ -19,11 +19,12 @@ import com.l0rdd.pensieve.domain.usecases.resume.LoadArtwork
 import com.l0rdd.pensieve.domain.usecases.resume.ObserveResume
 import com.l0rdd.pensieve.domain.usecases.resume.RestartPlayback
 import com.l0rdd.pensieve.domain.usecases.resume.ResumePlayback
-import com.l0rdd.pensieve.domain.usecases.system.OpenSettings
+import com.l0rdd.pensieve.domain.usecases.system.OpenSystemScreen
 import com.l0rdd.pensieve.domain.usecases.time.ObserveTime
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
 import com.l0rdd.pensieve.presentation.state.home.HomeUseCases
 import com.l0rdd.pensieve.presentation.state.home.HomeViewModel
+import com.l0rdd.pensieve.presentation.state.panel.QuickPanelViewModel
 import com.l0rdd.pensieve.presentation.strategies.HomeViewStrategyFactory
 import com.l0rdd.pensieve.presentation.strategies.HomeViewTools
 import com.l0rdd.pensieve.presentation.views.common.Bitmaps
@@ -52,7 +53,7 @@ fun injectHome(scope: AppScope): ViewModelProvider.Factory = object : ViewModelP
             toggleScreen = ToggleScreen(scope.house),
             toggleCinemaMode = ToggleCinemaMode(scope.house),
             observeTime = ObserveTime(scope.clock),
-            openSettings = OpenSettings(scope.system),
+            openSystemScreen = OpenSystemScreen(scope.system),
         ),
     ) as T
 }
@@ -61,5 +62,17 @@ fun injectHome(scope: AppScope): ViewModelProvider.Factory = object : ViewModelP
 fun injectHomeViews(context: Context, clock: FrameClock, dispatch: (HomeEvent) -> Unit) =
     HomeViewStrategyFactory(HomeViewTools(context, Fonts(context), Bitmaps(), clock, dispatch))
 
-/** Builds what the ⚙ key needs: opening the settings. */
-fun injectSettingsKey(scope: AppScope): OpenSettings = OpenSettings(scope.system)
+/** Builds what the ⚙ key needs: opening the quick panel. */
+fun injectSettingsKey(scope: AppScope): OpenSystemScreen = OpenSystemScreen(scope.system)
+
+/** Builds the quick panel's view model on the app scope. */
+fun injectQuickPanel(scope: AppScope): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = QuickPanelViewModel(
+        ObserveLook(scope.look), ChangeLook(scope.look), ObserveHouse(scope.house),
+        ToggleCinemaMode(scope.house), ToggleScreen(scope.house), OpenSystemScreen(scope.system),
+    ) as T
+}
+
+/** Builds the looks' menu styles, for the quick panel. */
+fun injectMenuStyles(context: Context) = com.l0rdd.pensieve.presentation.strategies.MenuStyleStrategyFactory(Fonts(context))

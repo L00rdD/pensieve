@@ -1,6 +1,8 @@
 package com.l0rdd.pensieve.domain.repositories
 
-/** The projector's own settings screen. */
+import com.l0rdd.pensieve.domain.entities.system.SystemScreen
+
+/** The projector's own screens, and the quick panel. */
 interface SystemRepository {
-    suspend fun openSettings()
+    suspend fun open(screen: SystemScreen)
 }

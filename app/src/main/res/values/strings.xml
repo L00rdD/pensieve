@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pensieve</string>
+    <string name="settings_key_service">Pensieve · touche Paramètres</string>
+    <string name="settings_key_service_description">Ouvre les réglages rapides avec la touche ⚙ de la télécommande, dans toutes les applis. Ne lit rien d\'autre que cette touche.</string>
 
     <!-- shared -->
     <string name="settings">Paramètres</string>
@@ -26,6 +28,14 @@
     <string name="nothing_to_resume">Rien à reprendre</string>
     <string name="open_jellyfin">Ouvrir Jellyfin</string>
     <string name="lights_on">%1$d / %2$d</string>
+
+    <!-- the quick panel (⚙) -->
+    <string name="panel_title">Réglages rapides</string>
+    <string name="panel_settings">Tous les paramètres</string>
+    <string name="panel_picture">Image</string>
+    <string name="panel_keystone">Correction trapèze</string>
+    <string name="panel_network">Réseau et Wi-Fi</string>
+    <string name="panel_look">Look de l\'accueil</string>
 
     <!-- arranging an app (OK held) -->
     <string name="arrange_pin">Mettre en favori</string>

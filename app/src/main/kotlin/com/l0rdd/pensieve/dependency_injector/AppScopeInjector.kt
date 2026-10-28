@@ -20,6 +20,9 @@ import com.l0rdd.pensieve.data.repositories.time.SystemClockRepository
 private const val STORE = "com.android.vending"
 private const val SCREEN = "screen"
 
+/** The action that opens the quick panel (see the manifest). */
+const val QUICK_PANEL = "com.l0rdd.pensieve.QUICK_PANEL"
+
 /** The favourites of a first run, those that are installed. */
 private val DEFAULT_FAVORITES = listOf(
     "com.netflix.ninja", "org.jellyfin.androidtv", "com.canal.android.canal",
@@ -40,6 +43,6 @@ fun injectAppScope(context: Context): AppScope {
         house = HubHouseRepository(http, HubStatusMapper(BuildConfig.CINEMA_OUTLETS.split(',').toSet(), SCREEN), BuildConfig.HUB_URL, SCREEN),
         look = PreferencesLookRepository(prefs),
         clock = SystemClockRepository(),
-        system = AndroidSystemRepository(packages),
+        system = AndroidSystemRepository(packages, QUICK_PANEL, app.packageName),
     )
 }

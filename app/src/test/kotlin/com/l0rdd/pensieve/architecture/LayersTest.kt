@@ -60,8 +60,8 @@ class LayersTest {
     }
 
     @Test
-    fun `the injector is called only by the activities and the application`() {
-        val files = sources("app/src/main/kotlin/$app/presentation").filter { !it.name.endsWith("Activity.kt") }
+    fun `the injector is called only by the activities, the services and the application`() {
+        val files = sources("app/src/main/kotlin/$app/presentation").filter { !it.name.endsWith("Activity.kt") && !it.name.endsWith("Service.kt") }
         val found = breaches(files, listOf(Rule("calls the injector", Regex("""^import com\.l0rdd\.pensieve\.dependency_injector"""))))
         assertTrue(found.joinToString("\n"), found.isEmpty())
     }

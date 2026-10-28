@@ -31,20 +31,31 @@
             </intent-filter>
         </activity>
 
-        <!-- the remote's ⚙ key: SystemUI asks for the quick settings panel the Google TV home used
-             to answer; this answers it, from any app, with the projector's settings -->
+        <!-- the quick panel, over any app -->
         <activity
-            android:name=".presentation.SettingsKeyActivity"
-            android:exported="true"
+            android:name=".presentation.QuickPanelActivity"
+            android:exported="false"
             android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:launchMode="singleTask"
+            android:taskAffinity="com.l0rdd.pensieve.panel"
+            android:theme="@style/Theme.Pensieve.Panel">
             <intent-filter>
-                <action android:name="android.app.action.TOGGLE_NOTIFICATION_HANDLER_PANEL" />
-                <action android:name="android.app.action.OPEN_NOTIFICATION_HANDLER_PANEL" />
+                <action android:name="com.l0rdd.pensieve.QUICK_PANEL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- the remote's ⚙ key: SystemUI only hands it to the Google TV home, which is disabled;
+             this service sees the key first, in any app, and opens the projector's settings -->
+        <service
+            android:name=".presentation.SettingsKeyService"
+            android:exported="false"
+            android:label="@string/settings_key_service"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/settings_key_service" />
+        </service>
     </application>
 </manifest>
