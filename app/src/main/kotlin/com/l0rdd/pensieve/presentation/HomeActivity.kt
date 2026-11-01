@@ -31,7 +31,9 @@ import kotlinx.coroutines.launch
 
 /**
  * The home screen. It builds the view of the look in the state (rebuilt when the look changes),
- * shows each state on it, opens the menus, and runs the animations only while it is in front.
+ * shows each state on it, opens the menus, and runs the animations only while it is in front and
+ * someone is there: after [REST_MS] without a key they stop, the picture staying, and the next key
+ * starts them again. Left on the home screen all night, the projector has little memory and CPU to spare.
  * Neva walks by on every look, under the menus.
  */
 class HomeActivity : ComponentActivity() {
@@ -45,6 +47,7 @@ class HomeActivity : ComponentActivity() {
     private var menu: MenuOverlay? = null
     private var shownMenu: HomeMenu? = null
     private var style: MenuStyle? = null
+    private val rest = Runnable { clock.stop() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,9 +60,16 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() { super.onStart(); clock.start() }
+    override fun onStart() { super.onStart(); stir() }
 
-    override fun onStop() { clock.stop(); super.onStop() }
+    override fun onStop() { stage.removeCallbacks(rest); clock.stop(); super.onStop() }
+
+    /** Someone is there: the animations run, until [REST_MS] without a key. */
+    private fun stir() {
+        clock.start()
+        stage.removeCallbacks(rest)
+        stage.postDelayed(rest, REST_MS)
+    }
 
     /** The home screen is home: BACK closes a menu, and otherwise does nothing. */
     @Deprecated("Deprecated in Java")
@@ -73,6 +83,7 @@ class HomeActivity : ComponentActivity() {
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) Log.d(TAG, "key ${event.keyCode} ${KeyEvent.keyCodeToString(event.keyCode)}")
+        if (event.action == KeyEvent.ACTION_DOWN) stir()
         when (event.keyCode) {
             KeyEvent.KEYCODE_BACK -> if (shownMenu == null) return true
             KeyEvent.KEYCODE_SETTINGS -> {
@@ -138,6 +149,7 @@ class HomeActivity : ComponentActivity() {
 }
 
 private const val TAG = "Pensieve"
+private const val REST_MS = 10 * 60_000L
 
 /** A home view that dresses its menus. */
 interface MenuStyled {
