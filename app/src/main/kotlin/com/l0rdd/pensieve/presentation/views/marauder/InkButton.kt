@@ -18,11 +18,14 @@ class InkButton(context: Context, face: Typeface, text: String, private val inkC
         setPadding(24, 8, 24, 8)
         isFocusable = true; isClickable = true
         setTextColor(inkColor)
-        setOnFocusChangeListener { _, has ->
-            setTextColor(if (has) 0xFFF6E7C2.toInt() else inkColor)
-            animate().rotation(if (has) -1f else 0f).scaleX(if (has) 1.05f else 1f).scaleY(if (has) 1.05f else 1f).setDuration(160).start()
-            invalidate()
-        }
+        setOnFocusChangeListener { _, has -> focusChanged(has) }
+    }
+
+    private fun focusChanged(has: Boolean) {
+        setTextColor(if (has) 0xFFF6E7C2.toInt() else inkColor)
+        val scale = if (has) 1.05f else 1f
+        animate().rotation(if (has) -1f else 0f).scaleX(scale).scaleY(scale).setDuration(160).start()
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {

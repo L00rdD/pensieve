@@ -77,26 +77,47 @@ class GazetteHero(context: Context, private val fonts: Fonts, clock: FrameClock,
 
         /** Lays the text out again only when what it says changes. */
         private fun layout(width: Float) {
-            val r = resume
-            val key = listOf(r, now?.hour, now?.minute, width).toString()
+            val key = layoutKey(width)
             if (key == laidOut) return
             laidOut = key
+            val r = resume
             val x = 246f; val right = width - 24f
-            val title = if (r == null) nothing else "${listOfNotNull(r.series, r.title).joinToString(" · ")} : la projection interrompue à ${FrenchTime.inWords((r.position.inWholeMinutes / 60).toInt(), (r.position.inWholeMinutes % 60).toInt())}"
+            val title = r?.let(::headline) ?: nothing
             headLayout = StaticLayout.Builder.obtain(title, 0, title.length, head, (right - x).toInt()).setMaxLines(2).setEllipsize(android.text.TextUtils.TruncateAt.END).build()
-            captionLayout = StaticLayout.Builder.obtain(if (r != null) "Photographié sur le plateau." else "", 0, if (r != null) 28 else 0, small, 200).build()
+            val caption = if (r != null) "Photographié sur le plateau." else ""
+            captionLayout = StaticLayout.Builder.obtain(caption, 0, caption.length, small, 200).build()
             if (r == null) { deckLayout = null; bodyLayout = null; return }
+            layArticle(r, right - x)
+        }
+
+        /** What the text says: what to resume, the time it ends at, and the width. */
+        private fun layoutKey(width: Float) = listOf(resume, now?.hour, now?.minute, width).toString()
+
+        private fun headline(r: Resume) =
+            "${listOfNotNull(r.series, r.title).joinToString(" · ")} : la projection interrompue à ${FrenchTime.inWords((r.position.inWholeMinutes / 60).toInt(), (r.position.inWholeMinutes % 60).toInt())}"
+
+        /** The deck (when the film will end) and the body (year, length, genre, overview), [column] wide in all. */
+        private fun layArticle(r: Resume, column: Float) {
             val end = now?.plusSeconds(r.remaining.inWholeSeconds)?.let { FrenchTime.inWords(it.hour, it.minute) } ?: "bientôt"
             val deckText = "Le film reprendra où vous l'avez laissé ; fin annoncée vers $end."
-            deckLayout = StaticLayout.Builder.obtain(deckText, 0, deckText.length, deck, (right - x).toInt()).setMaxLines(1).setEllipsize(android.text.TextUtils.TruncateAt.END).build()
+            deckLayout = StaticLayout.Builder.obtain(deckText, 0, deckText.length, deck, column.toInt()).setMaxLines(1).setEllipsize(android.text.TextUtils.TruncateAt.END).build()
             val bodyText = listOfNotNull(r.year?.toString(), "${r.runtime.inWholeMinutes} minutes", r.genres.firstOrNull()).joinToString(" · ") + ". " + r.overview
-            bodyLayout = StaticLayout.Builder.obtain(bodyText, 0, bodyText.length, body, (((right - x) - 26) / 2).toInt()).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
+            bodyLayout = StaticLayout.Builder.obtain(bodyText, 0, bodyText.length, body, ((column - 26) / 2).toInt()).setAlignment(Layout.Alignment.ALIGN_NORMAL).build()
         }
 
         override fun onDraw(canvas: Canvas) {
             val w = width.toFloat(); val h = height.toFloat()
             canvas.drawRect(0f, 0f, w, h, paper)
-            // the photo, moving a little
+            drawPhoto(canvas)
+            val r = resume
+            layout(w)
+            captionLayout?.let { canvas.save(); canvas.translate(18f, 258f); it.draw(canvas); canvas.restore() }
+            drawMasthead(canvas, w)
+            if (drawArticle(canvas, w, r != null)) drawPin(canvas, w)
+        }
+
+        /** The photo, moving a little, under its halftone. */
+        private fun drawPhoto(canvas: Canvas) {
             val box = RectF(18f, 16f, 218f, 252f)
             canvas.save(); canvas.clipRect(box)
             poster?.let {
@@ -107,30 +128,40 @@ class GazetteHero(context: Context, private val fonts: Fonts, clock: FrameClock,
             canvas.drawBitmap(tone, box.left, box.top, null)
             canvas.restore()
             rule.style = Paint.Style.STROKE; rule.strokeWidth = 1f; canvas.drawRect(box, rule); rule.style = Paint.Style.FILL
-            val r = resume
-            layout(w)
-            captionLayout?.let { canvas.save(); canvas.translate(18f, 258f); it.draw(canvas); canvas.restore() }
-            // the masthead
+        }
+
+        private fun drawMasthead(canvas: Canvas, w: Float) {
             val x = 246f; val right = w - 24f
             canvas.drawRect(x, 18f, right, 22f, rule)
             canvas.drawText(special, x, 46f, small)
             canvas.drawText(masthead, (x + right) / 2, 48f, mast)
             canvas.drawText(now?.let { FrenchTime.longDate(it).substringBefore(' ') } ?: "", right - small.measureText("mercredi"), 46f, small)
             canvas.drawRect(x, 56f, right, 57f, rule); canvas.drawRect(x, 59f, right, 60f, rule)
-            val headL = headLayout ?: return
+        }
+
+        /** The headline, and with something to resume the deck and the body; false when the page stops short of its pin. */
+        private fun drawArticle(canvas: Canvas, w: Float, resuming: Boolean): Boolean {
+            val x = 246f; val right = w - 24f
+            val headL = headLayout ?: return false
             canvas.save(); canvas.translate(x, 70f); headL.draw(canvas); canvas.restore()
-            r ?: return
+            if (!resuming) return false
             val top = 76f + headL.height
             deckLayout?.let { canvas.save(); canvas.translate(x, top); it.draw(canvas); canvas.restore() }
-            bodyLayout?.let { bodyL ->
-                val col = ((right - x) - 26) / 2; val lines = 3
-                canvas.save(); canvas.translate(x, top + 32); canvas.clipRect(0f, 0f, col, lines * body.fontSpacing); bodyL.draw(canvas); canvas.restore()
-                if (bodyL.lineCount > lines) {
-                    canvas.save(); canvas.translate(x + col + 26, top + 32 - lines * body.fontSpacing); canvas.clipRect(0f, lines * body.fontSpacing, col, lines * 2 * body.fontSpacing); bodyL.draw(canvas); canvas.restore()
-                    canvas.drawRect(x + col + 12, top + 34, x + col + 13, top + 30 + lines * body.fontSpacing, rule)
-                }
-            }
-            // the red pin that holds the page on the map
+            bodyLayout?.let { drawBody(canvas, it, x, ((right - x) - 26) / 2, top) }
+            return true
+        }
+
+        /** The body in two columns of three lines, [col] wide, a rule between them. */
+        private fun drawBody(canvas: Canvas, bodyL: StaticLayout, x: Float, col: Float, top: Float) {
+            val lines = 3
+            canvas.save(); canvas.translate(x, top + 32); canvas.clipRect(0f, 0f, col, lines * body.fontSpacing); bodyL.draw(canvas); canvas.restore()
+            if (bodyL.lineCount <= lines) return
+            canvas.save(); canvas.translate(x + col + 26, top + 32 - lines * body.fontSpacing); canvas.clipRect(0f, lines * body.fontSpacing, col, lines * 2 * body.fontSpacing); bodyL.draw(canvas); canvas.restore()
+            canvas.drawRect(x + col + 12, top + 34, x + col + 13, top + 30 + lines * body.fontSpacing, rule)
+        }
+
+        /** The red pin that holds the page on the map. */
+        private fun drawPin(canvas: Canvas, w: Float) {
             if (pin.shader == null) pin.shader = RadialGradient(w / 2 - 3, 2f, 10f, intArrayOf(0xFFE0605A.toInt(), 0xFF8C1D22.toInt(), 0xFF4A0C10.toInt()), floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP)
             canvas.drawCircle(w / 2, 4f, 8f, pin)
         }

@@ -58,20 +58,30 @@ class ReactorView(context: Context, fonts: Fonts, clock: FrameClock, private val
         val box = RectF(c - r * 0.93f, cy - r * 0.93f, c + r * 0.93f, cy + r * 0.93f)
         stroke.strokeWidth = 5f; stroke.color = alpha(GOLD, 0.15f); canvas.drawArc(box, 0f, 360f, false, stroke)
         stroke.color = GOLD; canvas.drawArc(box, -90f, 360f * progress, false, stroke)
-        // three arcs, turning back
+        drawArcs(canvas, c, cy, r, color)
+        drawCoils(canvas, c, cy, r, color)
+        drawCore(canvas, c, cy, r * 0.5f, color)
+    }
+
+    /** Three arcs, turning back, faster with the focus. */
+    private fun drawArcs(canvas: Canvas, c: Float, cy: Float, r: Float, color: Int) {
         canvas.save(); canvas.rotate(-t * (if (isFocused) 120f else 26f), c, cy)
         stroke.color = color; stroke.strokeWidth = 3f
         val arcs = RectF(c - r * 0.86f, cy - r * 0.86f, c + r * 0.86f, cy + r * 0.86f)
         canvas.drawArc(arcs, 0f, 70f, false, stroke); canvas.drawArc(arcs, 120f, 80f, false, stroke); canvas.drawArc(arcs, 250f, 70f, false, stroke)
         canvas.restore()
-        // the ten coils, pulsing
-        // a thick stroke on the ring's middle gives the coils without any clipping
+    }
+
+    /** The ten coils, pulsing: a thick stroke on the ring's middle gives them without any clipping. */
+    private fun drawCoils(canvas: Canvas, c: Float, cy: Float, r: Float, color: Int) {
         val outer = r * 0.85f; val inner = r * 0.62f; val mid = (outer + inner) / 2
         coil.color = alpha(color, 0.75f + 0.25f * sin(t * 2f)); coil.strokeWidth = outer - inner
         val coils = RectF(c - mid, cy - mid, c + mid, cy + mid)
         for (i in 0 until 10) canvas.drawArc(coils, i * 36f + 3f - 90f, 30f, false, coil)
-        // the core
-        val core = r * 0.5f
+    }
+
+    /** The core, its triangle, and what to resume written on it. */
+    private fun drawCore(canvas: Canvas, c: Float, cy: Float, core: Float, color: Int) {
         fill.shader = coreShader ?: RadialGradient(c, cy, core, intArrayOf(0xFF1D6A86.toInt(), 0xFF0B2B3A.toInt(), 0xFF04121A.toInt()), floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP).also { coreShader = it }
         canvas.drawCircle(c, cy, core, fill); fill.shader = null
         stroke.color = color; stroke.strokeWidth = 2f; canvas.drawCircle(c, cy, core, stroke)

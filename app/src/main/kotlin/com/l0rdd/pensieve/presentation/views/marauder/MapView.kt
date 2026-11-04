@@ -63,33 +63,50 @@ class MapView(context: Context, private val italic: Typeface, clock: FrameClock)
     override fun onDraw(canvas: Canvas) {
         val bmp = paper ?: draw(width, height).also { paper = it }
         canvas.drawBitmap(bmp, 0f, 0f, null)
-        people.forEach { p ->
-            p.trail.forEachIndexed { k, f -> step(canvas, f[0], f[1], f[2], f[3] > 0, 0.08f + 0.5f * k / p.trail.size, 1f) }
-            val w = label.measureText(p.name) + 16
-            ink.style = Paint.Style.FILL; ink.color = InkColors.alpha(0xFFF6E7C2.toInt(), 0.6f)
-            canvas.drawRect(p.x - w / 2, p.y + 14, p.x + w / 2, p.y + 36, ink)
-            ink.style = Paint.Style.STROKE; ink.strokeWidth = 1.2f; ink.color = InkColors.alpha(InkColors.INK, 0.5f)
-            canvas.drawRect(p.x - w / 2, p.y + 14, p.x + w / 2, p.y + 36, ink)
-            label.color = InkColors.alpha(InkColors.INK, 0.65f)
-            canvas.drawText(p.name, p.x, p.y + 31, label)
+        people.forEach { drawWalker(canvas, it) }
+        walk?.let { drawWalk(canvas, it) }
+    }
+
+    /** Someone walking about: their footprints fading behind them, their name on its label. */
+    private fun drawWalker(canvas: Canvas, p: Walker) {
+        p.trail.forEachIndexed { k, f -> step(canvas, f[0], f[1], f[2], f[3] > 0, 0.08f + 0.5f * k / p.trail.size, 1f) }
+        val w = label.measureText(p.name) + 16
+        ink.style = Paint.Style.FILL; ink.color = InkColors.alpha(0xFFF6E7C2.toInt(), 0.6f)
+        canvas.drawRect(p.x - w / 2, p.y + 14, p.x + w / 2, p.y + 36, ink)
+        ink.style = Paint.Style.STROKE; ink.strokeWidth = 1.2f; ink.color = InkColors.alpha(InkColors.INK, 0.5f)
+        canvas.drawRect(p.x - w / 2, p.y + 14, p.x + w / 2, p.y + 36, ink)
+        label.color = InkColors.alpha(InkColors.INK, 0.65f)
+        canvas.drawText(p.name, p.x, p.y + 31, label)
+    }
+
+    /** The user's footsteps along [pts], appearing one after the other and fading. */
+    private fun drawWalk(canvas: Canvas, pts: List<FloatArray>) {
+        val total = (1 until pts.size).sumOf { hypot(pts[it][0] - pts[it - 1][0], pts[it][1] - pts[it - 1][1]).toDouble() }.toFloat()
+        val steps = maxOf(2f, total / 20f)
+        var n = 0
+        for (i in 1 until pts.size) {
+            n = drawLeg(canvas, pts[i - 1], pts[i], n, steps)
+            if (n < 0) return
         }
-        walk?.let { pts ->
-            val total = (1 until pts.size).sumOf { hypot(pts[it][0] - pts[it - 1][0], pts[it][1] - pts[it - 1][1]).toDouble() }.toFloat()
-            val steps = maxOf(2f, total / 20f)
-            var n = 0
-            for (i in 1 until pts.size) {
-                val (x0, y0) = pts[i - 1].let { it[0] to it[1] }; val (x1, y1) = pts[i].let { it[0] to it[1] }
-                val len = hypot(x1 - x0, y1 - y0); val ang = atan2(y1 - y0, x1 - x0)
-                var d = if (n > 0) 10f else 0f
-                while (d < len) {
-                    val age = walkT - n / steps * 1.1f
-                    if (age < 0) return@let
-                    val a = (0.9f - maxOf(0f, age - 1.6f) * 0.6f)
-                    if (a > 0) step(canvas, x0 + (x1 - x0) * d / len, y0 + (y1 - y0) * d / len, ang, n % 2 == 1, a, 0.85f)
-                    d += 20f; n++
-                }
-            }
+    }
+
+    /**
+     * The footsteps from [from] to [to], [first] being the number of the first; returns the number of
+     * the next, or -1 when the walk has not got further yet.
+     */
+    private fun drawLeg(canvas: Canvas, from: FloatArray, to: FloatArray, first: Int, steps: Float): Int {
+        val (x0, y0) = from[0] to from[1]; val (x1, y1) = to[0] to to[1]
+        val len = hypot(x1 - x0, y1 - y0); val ang = atan2(y1 - y0, x1 - x0)
+        var n = first
+        var d = if (n > 0) 10f else 0f
+        while (d < len) {
+            val age = walkT - n / steps * 1.1f
+            if (age < 0) return -1
+            val a = (0.9f - maxOf(0f, age - 1.6f) * 0.6f)
+            if (a > 0) step(canvas, x0 + (x1 - x0) * d / len, y0 + (y1 - y0) * d / len, ang, n % 2 == 1, a, 0.85f)
+            d += 20f; n++
         }
+        return n
     }
 
     private fun step(canvas: Canvas, x: Float, y: Float, angle: Float, left: Boolean, alpha: Float, scale: Float) {

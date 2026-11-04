@@ -106,17 +106,7 @@ class CyberpunkSkin(private val tools: HomeViewTools) : ShelfSkin {
                 val w = width.toFloat(); val h = height.toFloat()
                 CutFrame.draw(canvas, w, h, isFocused)
                 val label = a.app.label.uppercase()
-                if (big) {
-                    canvas.drawText(if (isFocused) "ACCESS ▸" else "APP-%02d".format(index + 1), 20f, 28f, small.apply { color = if (isFocused) CyberColors.YELLOW else CyberColors.MUTED })
-                    art?.let { ArtworkDrawing.fit(canvas, it, RectF(w - 150f, 16f, w - 16f, 86f)) }
-                    drawName(canvas, label, 20f, h - 48f, w - 40f)
-                    small.color = CyberColors.MUTED
-                    canvas.drawText(if (a.isNew) "NOUVEAU" else a.app.id.value.substringAfterLast('.').uppercase(), 20f, h - 20f, small)
-                } else {
-                    art?.let { ArtworkDrawing.fit(canvas, it, RectF(20f, 14f, w - 20f, h - 44f)) }
-                    if (a.app.kind == AppKind.STORE && art == null) canvas.drawText("+", w / 2 - 8, h / 2, name)
-                    drawName(canvas, label, 14f, h - 16f, w - 28f)
-                }
+                if (big) drawBig(canvas, a, label, w, h) else drawSmall(canvas, a, label, w, h)
                 if (a.isNew) { small.color = CyberColors.CYAN; canvas.drawText("NEW", w - 46f, 22f, small) }
             }
             override fun onFocusChanged(g: Boolean, d: Int, r: android.graphics.Rect?) {
@@ -124,6 +114,23 @@ class CyberpunkSkin(private val tools: HomeViewTools) : ShelfSkin {
                 animate().scaleX(if (g) 1.04f else 1f).scaleY(if (g) 1.04f else 1f).translationY(if (g) -4f else 0f).setDuration(160).start()
                 if (g) animate().translationX(-5f).setDuration(55).withEndAction { animate().translationX(4f).setDuration(55).withEndAction { animate().translationX(0f).setDuration(55).start() }.start() }.start()
             }
+        }
+
+        /** A favourite: its number (or ACCESS with the focus), its artwork, its name and its package. */
+        private fun drawBig(canvas: Canvas, a: ShelvedApp, label: String, w: Float, h: Float) {
+            val focused = view.isFocused
+            canvas.drawText(if (focused) "ACCESS ▸" else "APP-%02d".format(index + 1), 20f, 28f, small.apply { color = if (focused) CyberColors.YELLOW else CyberColors.MUTED })
+            art?.let { ArtworkDrawing.fit(canvas, it, RectF(w - 150f, 16f, w - 16f, 86f)) }
+            drawName(canvas, label, 20f, h - 48f, w - 40f)
+            small.color = CyberColors.MUTED
+            canvas.drawText(if (a.isNew) "NOUVEAU" else a.app.id.value.substringAfterLast('.').uppercase(), 20f, h - 20f, small)
+        }
+
+        /** Any other app: its artwork (a + for a store without one) over its name. */
+        private fun drawSmall(canvas: Canvas, a: ShelvedApp, label: String, w: Float, h: Float) {
+            art?.let { ArtworkDrawing.fit(canvas, it, RectF(20f, 14f, w - 20f, h - 44f)) }
+            if (a.app.kind == AppKind.STORE && art == null) canvas.drawText("+", w / 2 - 8, h / 2, name)
+            drawName(canvas, label, 14f, h - 16f, w - 28f)
         }
 
         private fun drawName(canvas: Canvas, label: String, x: Float, y: Float, max: Float) {

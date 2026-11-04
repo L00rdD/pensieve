@@ -30,12 +30,17 @@ class FrameClock(private val fps: Int = 24) : Choreographer.FrameCallback {
     override fun doFrame(frameTimeNanos: Long) {
         if (!running) return
         if (start == 0L) start = frameTimeNanos
-        if (last == 0L || frameTimeNanos - last >= 1_000_000_000L / fps - 2_000_000L) {
-            val dt = if (last == 0L) 0f else (frameTimeNanos - last) / 1e9f
-            last = frameTimeNanos
-            val t = (frameTimeNanos - start) / 1e9f
-            listeners.forEach { it(t, dt.coerceAtMost(0.1f)) }
-        }
+        if (isDue(frameTimeNanos)) tick(frameTimeNanos)
         Choreographer.getInstance().postFrameCallback(this)
+    }
+
+    /** The first frame, or one [fps]th of a second after the last (give or take 2 ms). */
+    private fun isDue(frameTimeNanos: Long) = last == 0L || frameTimeNanos - last >= 1_000_000_000L / fps - 2_000_000L
+
+    private fun tick(frameTimeNanos: Long) {
+        val dt = if (last == 0L) 0f else (frameTimeNanos - last) / 1e9f
+        last = frameTimeNanos
+        val t = (frameTimeNanos - start) / 1e9f
+        listeners.forEach { it(t, dt.coerceAtMost(0.1f)) }
     }
 }

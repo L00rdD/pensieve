@@ -21,6 +21,7 @@ import com.l0rdd.pensieve.domain.entities.apps.AppKind
 import com.l0rdd.pensieve.domain.entities.apps.ShelvedApp
 import com.l0rdd.pensieve.domain.entities.house.House
 import com.l0rdd.pensieve.domain.entities.house.Outlet
+import com.l0rdd.pensieve.domain.entities.house.Screen
 import com.l0rdd.pensieve.domain.entities.resume.Resume
 import com.l0rdd.pensieve.presentation.MenuStyled
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
@@ -66,6 +67,17 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
     init {
         root.addView(HelmetView(context), FrameLayout.LayoutParams(-1, -1))
         root.addView(page, FrameLayout.LayoutParams(-1, 1260))
+        addFades()
+        placeHud()
+        placePage()
+        root.place(more, 660, 958, 600, 26)
+        root.place(voice, 410, 1000, 1200, 44)
+        wire()
+        root.viewTreeObserver.addOnGlobalFocusChangeListener { _, focused -> focused?.let(::focusMoved) }
+    }
+
+    /** The page fading out under the helmet, at the top and below the strip. */
+    private fun addFades() {
         // the page fades out under the top of the helmet when it moves up
         root.addView(object : View(context) {
             private val fade = Paint()
@@ -82,6 +94,10 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
                 canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), fade)
             }
         }, FrameLayout.LayoutParams(-1, 150).apply { topMargin = 930 })
+    }
+
+    /** The helmet's display round the page: the company, the room, the status, the settings, the compass and the ladders. */
+    private fun placeHud() {
         root.place(text(fonts.rajdhaniSemi, 16f, JarvisColors.MUTED, 0.35f).apply { text = context.getString(R.string.jv_company) }, 70, 40)
         root.place(text(fonts.michroma, 22f, JarvisColors.CYAN, 0.3f).apply { text = context.getString(R.string.jv_room); setShadowLayer(14f, 0f, 0f, JarvisColors.alpha(JarvisColors.CYAN, 0.5f)) }, 70, 64)
         root.place(status, 900, 42, 720, 40).also { status.gravity = Gravity.END }
@@ -89,39 +105,48 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         root.place(CompassView(context, fonts.rajdhaniSemi, tools.clock), 660, 104, 600, 40)
         root.place(LadderView(context, fonts.rajdhaniSemi, tools.clock, "ALT", "0247", 2.3f), 26, 360, 60, 380)
         root.place(LadderView(context, fonts.rajdhaniSemi, tools.clock, "THR", "100%", -1.5f), 1834, 360, 60, 380)
+    }
 
+    /** The page: the target, the reactor, the modules round it, the strip of apps and the house. */
+    private fun placePage() {
         page.place(target, 460, 160, 1000, 30)
         page.place(reactor, 775, 252, 370, 370)
         page.place(restart, 810, 664, 300, 40)
+        placeModules()
+        page.place(label(context.getString(R.string.applications).uppercase(), "05"), 230, 742, 1460, 26)
+        val scroller = HorizontalScrollView(context).apply { isHorizontalScrollBarEnabled = false; clipToPadding = false; addView(strip) }
+        page.place(scroller, 222, 768, 1476, 150)
+        page.place(label(context.getString(R.string.jv_systems), "06"), 230, 1000, 1460, 26)
+        page.place(homeRow, 230, 1030, 1460, 180)
+    }
+
+    /** Three modules on each side of the reactor, each with its callout pointing at it. */
+    private fun placeModules() {
         val rows = listOf(196, 366, 536)
         modules.forEachIndexed { i, m ->
             val left = i < 3
             page.place(m, if (left) 250 else 1270, rows[i % 3], 400, 132)
             page.place(callouts[i], if (left) 650 else 1200, rows[i % 3] + 60, 70, 12)
         }
-        page.place(label(context.getString(R.string.applications).uppercase(), "05"), 230, 742, 1460, 26)
-        val scroller = HorizontalScrollView(context).apply { isHorizontalScrollBarEnabled = false; clipToPadding = false; addView(strip) }
-        page.place(scroller, 222, 768, 1476, 150)
-        page.place(label(context.getString(R.string.jv_systems), "06"), 230, 1000, 1460, 26)
-        page.place(homeRow, 230, 1030, 1460, 180)
-        root.place(more, 660, 958, 600, 26)
-        root.place(voice, 410, 1000, 1200, 44)
+    }
 
+    /** OK on the reactor, the restart and the settings, and what J.A.R.V.I.S. says of them. */
+    private fun wire() {
         reactor.pressable({ dispatch(if (state.resume != null) HomeEvent.ResumePicked else jellyfin()) })
         restart.pressable({ dispatch(HomeEvent.RestartPicked) })
         gear.pressable({ dispatch(HomeEvent.SettingsPicked) }, { dispatch(HomeEvent.SettingsHeld) })
         says[reactor] = { state.resume?.let(::sayResume) ?: html(context.getString(R.string.jv_say_nothing)) }
         says[restart] = { html(context.getString(R.string.hint_restart)) }
         says[gear] = { html(context.getString(R.string.jv_say_settings)) }
+    }
 
-        root.viewTreeObserver.addOnGlobalFocusChangeListener { _, focused ->
-            focused ?: return@addOnGlobalFocusChangeListener
-            says[focused]?.let { voice.say(it()) }
-            val down = focused in houseViews
-            page.animate().translationY(if (down) -350f else 0f).setDuration(480).start()
-            root.getChildAt(2).animate().alpha(if (down) 1f else 0f).setDuration(480).start()
-            more.animate().alpha(if (down) 0f else 1f).setDuration(300).start()
-        }
+    /** J.A.R.V.I.S. comments on what has the focus, and the helmet looks down to the house. */
+    private fun focusMoved(focused: View) {
+        says[focused]?.let { voice.say(it()) }
+        val down = focused in houseViews
+        page.animate().translationY(if (down) -350f else 0f).setDuration(480).start()
+        root.getChildAt(2).animate().alpha(if (down) 1f else 0f).setDuration(480).start()
+        more.animate().alpha(if (down) 0f else 1f).setDuration(300).start()
     }
 
     override fun focusDefault() { reactor.requestFocus() }
@@ -183,27 +208,38 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         val key = listOf<Any>(house.outlets.map { it.id }, house.screen != null)
         if (key != houseKey) {
             houseKey = key
-            homeRow.removeAllViews(); houseViews.clear()
-            val count = 1 + house.outlets.size + (if (house.screen != null) 1 else 0)
-            val width = (1460 - 24 * (count - 1)) / count
-            repeat(count) { homeRow.addView(JarvisSystemView(context, fonts).also { houseViews += it }, LinearLayout.LayoutParams(width, 150).apply { if (it < count - 1) rightMargin = 24 }) }
-            more.text = context.getString(R.string.jv_more, count)
+            buildHouse(house)
         }
         val views = (0 until homeRow.childCount).map { homeRow.getChildAt(it) as JarvisSystemView }
-        val off = context.getString(R.string.unreachable)
-        views[0].show("SCÈNE", context.getString(R.string.cinema), context.getString(R.string.cinema_sub), if (!house.reachable) off else if (house.isCinema) "ACTIF" else "PRÊT", "◐")
-        views[0].pressable({ dispatch(HomeEvent.CinemaPicked) })
-        says[views[0]] = { html(context.getString(R.string.jv_say_cinema)) }
+        showCinema(views[0], house)
         house.outlets.forEachIndexed { i, outlet -> showOutlet(views[1 + i], outlet, house.reachable) }
-        house.screen?.let { screen ->
-            val v = views.last()
-            val where = context.getString(if (screen.isDown) R.string.down else R.string.up)
-            v.show("ÉCRAN", context.getString(R.string.screen_sub), "position ${screen.position} % · $where",
-                if (!house.reachable) off else if (screen.moving != null) context.getString(R.string.screen_moving) else context.getString(if (screen.isDown) R.string.screen_down else R.string.screen_up),
-                "▤", screen.position / 100f)
-            v.pressable({ dispatch(HomeEvent.ScreenPicked) })
-            says[v] = { html(context.getString(R.string.jv_say_screen, "<b>$where</b>")) }
-        }
+        house.screen?.let { showScreen(views.last(), it, house.reachable) }
+    }
+
+    /** One system per thing the house has: the cinema scene, each outlet, the screen. */
+    private fun buildHouse(house: House) {
+        homeRow.removeAllViews(); houseViews.clear()
+        val count = 1 + house.outlets.size + (if (house.screen != null) 1 else 0)
+        val width = (1460 - 24 * (count - 1)) / count
+        repeat(count) { homeRow.addView(JarvisSystemView(context, fonts).also { houseViews += it }, LinearLayout.LayoutParams(width, 150).apply { if (it < count - 1) rightMargin = 24 }) }
+        more.text = context.getString(R.string.jv_more, count)
+    }
+
+    private fun showCinema(view: JarvisSystemView, house: House) {
+        val state = if (!house.reachable) context.getString(R.string.unreachable) else if (house.isCinema) "ACTIF" else "PRÊT"
+        view.show("SCÈNE", context.getString(R.string.cinema), context.getString(R.string.cinema_sub), state, "◐")
+        view.pressable({ dispatch(HomeEvent.CinemaPicked) })
+        says[view] = { html(context.getString(R.string.jv_say_cinema)) }
+    }
+
+    private fun showScreen(view: JarvisSystemView, screen: Screen, reachable: Boolean) {
+        val where = context.getString(if (screen.isDown) R.string.down else R.string.up)
+        val state = if (!reachable) context.getString(R.string.unreachable)
+            else if (screen.moving != null) context.getString(R.string.screen_moving)
+            else context.getString(if (screen.isDown) R.string.screen_down else R.string.screen_up)
+        view.show("ÉCRAN", context.getString(R.string.screen_sub), "position ${screen.position} % · $where", state, "▤", screen.position / 100f)
+        view.pressable({ dispatch(HomeEvent.ScreenPicked) })
+        says[view] = { html(context.getString(R.string.jv_say_screen, "<b>$where</b>")) }
     }
 
     private fun showOutlet(view: JarvisSystemView, outlet: Outlet, reachable: Boolean) {

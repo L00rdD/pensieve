@@ -66,10 +66,13 @@ class MenuOverlay(context: Context, private val look: MenuStyle, private val onC
         setPadding(24, 14, 24, 14)
         isFocusable = focusable
         isClickable = focusable
-        if (focusable) setOnFocusChangeListener { v, has ->
-            v.setBackgroundColor(if (has) look.accent else Color.TRANSPARENT)
-            setTextColor(if (has) look.panel or 0xFF000000.toInt() else color)
-        }
+        if (focusable) setOnFocusChangeListener { v, has -> highlight(v as TextView, has, color) }
+    }
+
+    /** The entry with the focus is written in the panel's colour on the accent. */
+    private fun highlight(entry: TextView, has: Boolean, color: Int) {
+        entry.setBackgroundColor(if (has) look.accent else Color.TRANSPARENT)
+        entry.setTextColor(if (has) look.panel or 0xFF000000.toInt() else color)
     }
 
 }

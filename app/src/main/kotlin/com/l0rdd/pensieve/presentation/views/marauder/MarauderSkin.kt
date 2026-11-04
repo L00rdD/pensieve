@@ -128,36 +128,50 @@ class MarauderSkin(private val tools: HomeViewTools) : ShelfSkin {
             override fun onDraw(canvas: Canvas) {
                 val a = app ?: return
                 val w = width.toFloat(); val h = height.toFloat()
-                canvas.drawRect(0f, 0f, w, h, floor.apply { color = if (isFocused) 0xF7FAE8C0.toInt() else InkColors.ROOM })
-                val ink = if (isFocused) InkColors.RED else InkColors.INK
-                val door = w * 0.24f; val dl = (w - door) / 2; val dr = dl + door
-                wall.color = ink
-                wall.strokeWidth = 2.4f; walls(canvas, 1.2f, w - 1.2f, h - 1.2f, dl, dr)
-                wall.strokeWidth = 1.1f; walls(canvas, 6f, w - 6f, h - 6f, dl, dr)
-                canvas.drawLine(dl, h - 6, dl, h, wall); canvas.drawLine(dr, h - 6, dr, h, wall)
-                name.color = ink
-                if (big) {
-                    art?.let { ArtworkDrawing.fit(canvas, it, RectF(w - 150f, 16f, w - 18f, 88f)) }
-                    canvas.drawText(TextUtils.ellipsize(a.app.label, name, w - 44f, TextUtils.TruncateAt.END).toString(), 22f, h - 52f, name)
-                    canvas.drawText(if (a.isNew) "nouveau" else a.app.id.value.substringAfterLast('.'), 22f, h - 24f, sub)
-                } else {
-                    art?.let { ArtworkDrawing.fit(canvas, it, RectF(22f, 14f, w - 22f, h - 46f)) }
-                    name.textAlign = Paint.Align.CENTER
-                    canvas.drawText(TextUtils.ellipsize(a.app.label, name, w - 30f, TextUtils.TruncateAt.END).toString(), w / 2, h - 18f, name)
-                    name.textAlign = Paint.Align.LEFT
-                }
+                name.color = drawRoom(canvas, w, h, isFocused)
+                if (big) drawBig(canvas, a, w, h) else drawSmall(canvas, a, w, h)
                 if (a.isNew) { sub.color = InkColors.RED; canvas.drawText("nouveau", w - 82f, h - 14f, sub); sub.color = InkColors.MUTED }
-                if (isFocused) {   // the name on its ribbon, as the map labels people
-                    val tw = ribbon.measureText(a.app.label) + 24
-                    tagBox.color = 0xFFF6E7C2.toInt(); canvas.drawRect(w / 2 - tw / 2, 0f, w / 2 + tw / 2, 26f, tagBox)
-                    wall.strokeWidth = 1.5f; wall.color = InkColors.INK; canvas.drawRect(w / 2 - tw / 2, 0f, w / 2 + tw / 2, 26f, wall)
-                    canvas.drawText(a.app.label, w / 2, 20f, ribbon)
-                }
+                if (isFocused) drawRibbon(canvas, a.app.label, w)
             }
             override fun onFocusChanged(g: Boolean, d: Int, r: android.graphics.Rect?) {
                 super.onFocusChanged(g, d, r)
                 animate().rotation(if (g) -0.6f else 0f).scaleX(if (g) 1.03f else 1f).scaleY(if (g) 1.03f else 1f).translationY(if (g) -3f else 0f).setDuration(180).start()
             }
+        }
+
+        /** The floor and the double walls, red with the focus; returns the ink they are drawn in. */
+        private fun drawRoom(canvas: Canvas, w: Float, h: Float, focused: Boolean): Int {
+            canvas.drawRect(0f, 0f, w, h, floor.apply { color = if (focused) 0xF7FAE8C0.toInt() else InkColors.ROOM })
+            val ink = if (focused) InkColors.RED else InkColors.INK
+            val door = w * 0.24f; val dl = (w - door) / 2; val dr = dl + door
+            wall.color = ink
+            wall.strokeWidth = 2.4f; walls(canvas, 1.2f, w - 1.2f, h - 1.2f, dl, dr)
+            wall.strokeWidth = 1.1f; walls(canvas, 6f, w - 6f, h - 6f, dl, dr)
+            canvas.drawLine(dl, h - 6, dl, h, wall); canvas.drawLine(dr, h - 6, dr, h, wall)
+            return ink
+        }
+
+        /** A favourite: its artwork at the back, its name and its package by the door. */
+        private fun drawBig(canvas: Canvas, a: ShelvedApp, w: Float, h: Float) {
+            art?.let { ArtworkDrawing.fit(canvas, it, RectF(w - 150f, 16f, w - 18f, 88f)) }
+            canvas.drawText(TextUtils.ellipsize(a.app.label, name, w - 44f, TextUtils.TruncateAt.END).toString(), 22f, h - 52f, name)
+            canvas.drawText(if (a.isNew) "nouveau" else a.app.id.value.substringAfterLast('.'), 22f, h - 24f, sub)
+        }
+
+        /** Any other app: its artwork in the room, its name centred by the door. */
+        private fun drawSmall(canvas: Canvas, a: ShelvedApp, w: Float, h: Float) {
+            art?.let { ArtworkDrawing.fit(canvas, it, RectF(22f, 14f, w - 22f, h - 46f)) }
+            name.textAlign = Paint.Align.CENTER
+            canvas.drawText(TextUtils.ellipsize(a.app.label, name, w - 30f, TextUtils.TruncateAt.END).toString(), w / 2, h - 18f, name)
+            name.textAlign = Paint.Align.LEFT
+        }
+
+        /** With the focus, the name on its ribbon, as the map labels people. */
+        private fun drawRibbon(canvas: Canvas, label: String, w: Float) {
+            val tw = ribbon.measureText(label) + 24
+            tagBox.color = 0xFFF6E7C2.toInt(); canvas.drawRect(w / 2 - tw / 2, 0f, w / 2 + tw / 2, 26f, tagBox)
+            wall.strokeWidth = 1.5f; wall.color = InkColors.INK; canvas.drawRect(w / 2 - tw / 2, 0f, w / 2 + tw / 2, 26f, wall)
+            canvas.drawText(label, w / 2, 20f, ribbon)
         }
 
         private fun walls(canvas: Canvas, l: Float, r: Float, b: Float, dl: Float, dr: Float) {

@@ -38,18 +38,28 @@ class JarvisVoiceView(context: Context, fonts: Fonts, clock: FrameClock) : View(
     override fun onDraw(canvas: Canvas) {
         val y = height / 2f + 8f
         canvas.drawText("J.A.R.V.I.S.", 0f, y, who)
-        val talking = typed < line.length
+        drawBars(canvas, talking = typed < line.length)
+        canvas.drawRect(222f, 4f, 223f, height - 4f, rule)
+        val x = drawTyped(canvas, y)
+        if ((t * 2).toInt() % 2 == 0) { text.color = JarvisColors.CYAN; canvas.drawText("▍", x + 2, y, text) }
+    }
+
+    /** The voice bars, moving while it talks. */
+    private fun drawBars(canvas: Canvas, talking: Boolean) {
         for (i in 0 until 5) {
             val k = if (talking) 0.2f + 0.8f * abs(sin(t * 9f + i * 1.3f)) else 0.2f
             canvas.drawRect(170f + i * 6f, height / 2f - 12f * k, 173f + i * 6f, height / 2f + 12f * k, bar)
         }
-        canvas.drawRect(222f, 4f, 223f, height - 4f, rule)
+    }
+
+    /** What is typed so far, the bold parts in amber; returns where the cursor goes. */
+    private fun drawTyped(canvas: Canvas, y: Float): Float {
         var x = 240f
         for (i in 0 until typed) {
             text.color = if (gold.any { i in it }) JarvisColors.GOLD else JarvisColors.TEXT
             val ch = line[i].toString()
             canvas.drawText(ch, x, y, text); x += text.measureText(ch)
         }
-        if ((t * 2).toInt() % 2 == 0) { text.color = JarvisColors.CYAN; canvas.drawText("▍", x + 2, y, text) }
+        return x
     }
 }

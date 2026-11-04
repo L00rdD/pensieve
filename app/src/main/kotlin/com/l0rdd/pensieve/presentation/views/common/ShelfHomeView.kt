@@ -113,27 +113,40 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
         if (key == appsKey) return
         appsKey = key
         val focused = root.findFocus()?.getTag(R.id.app_id) as? String
-        grid(favorites, state.apps.favorites, 5, 176, skin::favoriteTile, focused)
-        grid(others, state.apps.others, 6, 128, skin::appTile, focused)
+        grid(Grid(favorites, 5, 176, skin::favoriteTile), state.apps.favorites, focused)
+        grid(Grid(others, 6, 128, skin::appTile), state.apps.others, focused)
     }
 
-    private fun grid(into: LinearLayout, apps: List<ShelvedApp>, columns: Int, height: Int, make: () -> AppTile, focused: String?) {
-        into.removeAllViews()
-        apps.chunked(columns).forEachIndexed { r, row ->
+    /** A grid of app tiles: where it goes, how many a row, how high, and how a tile is made. */
+    private class Grid(val into: LinearLayout, val columns: Int, val height: Int, val make: () -> AppTile)
+
+    /** Fills [grid] with [apps], row by row; the app that had the focus ([focused]) gets it back. */
+    private fun grid(grid: Grid, apps: List<ShelvedApp>, focused: String?) {
+        grid.into.removeAllViews()
+        apps.chunked(grid.columns).forEachIndexed { r, row ->
             val line = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             row.forEachIndexed { c, shelved ->
-                val tile = make()
-                tile.show(shelved, tools.bitmaps.of(shelved.app.artwork), r * columns + c)
-                tile.view.setTag(R.id.app_id, shelved.app.id.value)
-                tile.view.pressable({ dispatch(HomeEvent.AppPicked(shelved.app.id)) }, { dispatch(HomeEvent.AppHeld(shelved.app.id)) })
-                hints[tile.view] = { html(context.getString(if (shelved.app.kind == AppKind.STORE) R.string.hint_store else R.string.hint_open)) }
-                line.addView(tile.view, LinearLayout.LayoutParams(0, height, 1f).apply { if (c < columns - 1) rightMargin = 20 })
-                if (shelved.app.id.value == focused) tile.view.post { tile.view.requestFocus() }
+                val view = tile(grid.make, shelved, r * grid.columns + c)
+                line.addView(view, cell(grid.height, spaced = c < grid.columns - 1))
+                if (shelved.app.id.value == focused) view.post { view.requestFocus() }
             }
-            repeat(columns - row.size) { line.addView(View(context), LinearLayout.LayoutParams(0, height, 1f).apply { if (it < columns - row.size - 1) rightMargin = 20 }) }
-            into.addView(line, LinearLayout.LayoutParams(-1, height).apply { if (r > 0) topMargin = 22 })
+            repeat(grid.columns - row.size) { line.addView(View(context), cell(grid.height, spaced = it < grid.columns - row.size - 1)) }
+            grid.into.addView(line, LinearLayout.LayoutParams(-1, grid.height).apply { if (r > 0) topMargin = 22 })
         }
     }
+
+    /** The tile of one app, the [index]th of its grid: OK opens it, OK held arranges it. */
+    private fun tile(make: () -> AppTile, shelved: ShelvedApp, index: Int): View {
+        val tile = make()
+        tile.show(shelved, tools.bitmaps.of(shelved.app.artwork), index)
+        tile.view.setTag(R.id.app_id, shelved.app.id.value)
+        tile.view.pressable({ dispatch(HomeEvent.AppPicked(shelved.app.id)) }, { dispatch(HomeEvent.AppHeld(shelved.app.id)) })
+        hints[tile.view] = { html(context.getString(if (shelved.app.kind == AppKind.STORE) R.string.hint_store else R.string.hint_open)) }
+        return tile.view
+    }
+
+    /** A cell of a grid's row, [spaced] from the next one. */
+    private fun cell(height: Int, spaced: Boolean) = LinearLayout.LayoutParams(0, height, 1f).apply { if (spaced) rightMargin = 20 }
 
     private fun showHouse(house: House) {
         val key = listOf<Any>(house.outlets.map { it.id }, house.screen != null)
