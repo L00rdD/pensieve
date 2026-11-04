@@ -82,20 +82,24 @@ class HomeActivity : ComponentActivity() {
      * the menu of what has the focus (as OK held does).
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) Log.d(TAG, "key ${event.keyCode} ${KeyEvent.keyCodeToString(event.keyCode)}")
-        if (event.action == KeyEvent.ACTION_DOWN) stir()
-        when (event.keyCode) {
-            KeyEvent.KEYCODE_BACK -> if (shownMenu == null) return true
-            KeyEvent.KEYCODE_SETTINGS -> {
-                if (event.action == KeyEvent.ACTION_UP) viewModel.dispatch(HomeEvent.SettingsPicked)
-                return true
-            }
-            KeyEvent.KEYCODE_MENU -> {
-                if (event.action == KeyEvent.ACTION_UP && shownMenu == null) currentFocus?.let { if (it.isLongClickable) it.performLongClick() }
-                return true
-            }
+        if (event.action == KeyEvent.ACTION_DOWN) keyDown(event)
+        return when (remoteKey(event.keyCode, event.action, menuOpen = shownMenu != null)) {
+            RemoteKey.PASS -> super.dispatchKeyEvent(event)
+            RemoteKey.SWALLOW -> true
+            RemoteKey.SETTINGS -> true.also { viewModel.dispatch(HomeEvent.SettingsPicked) }
+            RemoteKey.MENU -> true.also { holdFocused() }
         }
-        return super.dispatchKeyEvent(event)
+    }
+
+    /** Someone pressed a key: it goes to the log the first time, and the animations wake up. */
+    private fun keyDown(event: KeyEvent) {
+        if (event.repeatCount == 0) Log.d(TAG, "key ${event.keyCode} ${KeyEvent.keyCodeToString(event.keyCode)}")
+        stir()
+    }
+
+    /** ≡ does what OK held does on what has the focus. */
+    private fun holdFocused() {
+        currentFocus?.let { if (it.isLongClickable) it.performLongClick() }
     }
 
     private fun show(state: HomeState) {
@@ -128,24 +132,54 @@ class HomeActivity : ComponentActivity() {
         val overlay = MenuOverlay(this, style ?: return, onClose = { viewModel.dispatch(HomeEvent.MenuClosed) })
         layer.addView(overlay, FrameLayout.LayoutParams(Stage.WIDTH, Stage.HEIGHT))
         menu = overlay
-        when (wanted) {
-            is HomeMenu.ArrangeApp -> overlay.show(wanted.label, buildList {
-                add(getString(if (wanted.favorite) R.string.arrange_unpin else R.string.arrange_pin) to { viewModel.dispatch(HomeEvent.Arranged(wanted.id, Arrange.PIN)) })
-                if (wanted.favorite) {
-                    add(getString(R.string.arrange_earlier) to { viewModel.dispatch(HomeEvent.Arranged(wanted.id, Arrange.EARLIER)) })
-                    add(getString(R.string.arrange_later) to { viewModel.dispatch(HomeEvent.Arranged(wanted.id, Arrange.LATER)) })
-                }
-                add(getString(R.string.arrange_hide) to { viewModel.dispatch(HomeEvent.Arranged(wanted.id, Arrange.HIDE)) })
-                add(getString(R.string.arrange_cancel) to { viewModel.dispatch(HomeEvent.MenuClosed) })
-            })
-            HomeMenu.PickLook -> overlay.show(getString(R.string.look_title), listOf(
-                getString(R.string.look_jarvis) to { viewModel.dispatch(HomeEvent.LookPicked(Look.JARVIS)) },
-                getString(R.string.look_cyberpunk) to { viewModel.dispatch(HomeEvent.LookPicked(Look.CYBERPUNK)) },
-                getString(R.string.look_marauder) to { viewModel.dispatch(HomeEvent.LookPicked(Look.MARAUDER)) },
-            ))
-        }
+        val title = (wanted as? HomeMenu.ArrangeApp)?.label ?: getString(R.string.look_title)
+        overlay.show(title, menuEntries(wanted).map { (text, event) -> getString(text) to { viewModel.dispatch(event) } })
         overlay.tag = focused
     }
+}
+
+/** What the home screen does with a key of the remote. */
+internal enum class RemoteKey {
+    /** Not the home screen's: the views answer it. */
+    PASS,
+
+    /** The home screen's, and nothing to do. */
+    SWALLOW,
+
+    /** ⚙ released: the settings. */
+    SETTINGS,
+
+    /** ≡ released with no menu open: the menu of what has the focus. */
+    MENU,
+}
+
+/**
+ * BACK does nothing on the home screen (it closes a menu when one is open); ⚙ opens the settings
+ * and ≡ the menu of what has the focus, both when released.
+ */
+internal fun remoteKey(keyCode: Int, action: Int, menuOpen: Boolean): RemoteKey = when (keyCode) {
+    KeyEvent.KEYCODE_BACK -> if (menuOpen) RemoteKey.PASS else RemoteKey.SWALLOW
+    KeyEvent.KEYCODE_SETTINGS -> if (action == KeyEvent.ACTION_UP) RemoteKey.SETTINGS else RemoteKey.SWALLOW
+    KeyEvent.KEYCODE_MENU -> if (action == KeyEvent.ACTION_UP && !menuOpen) RemoteKey.MENU else RemoteKey.SWALLOW
+    else -> RemoteKey.PASS
+}
+
+/** A menu's entries: the text of each and the event it sends. Moving makes sense for favourites only. */
+internal fun menuEntries(menu: HomeMenu): List<Pair<Int, HomeEvent>> = when (menu) {
+    is HomeMenu.ArrangeApp -> buildList {
+        add((if (menu.favorite) R.string.arrange_unpin else R.string.arrange_pin) to HomeEvent.Arranged(menu.id, Arrange.PIN))
+        if (menu.favorite) {
+            add(R.string.arrange_earlier to HomeEvent.Arranged(menu.id, Arrange.EARLIER))
+            add(R.string.arrange_later to HomeEvent.Arranged(menu.id, Arrange.LATER))
+        }
+        add(R.string.arrange_hide to HomeEvent.Arranged(menu.id, Arrange.HIDE))
+        add(R.string.arrange_cancel to HomeEvent.MenuClosed)
+    }
+    HomeMenu.PickLook -> listOf(
+        R.string.look_jarvis to HomeEvent.LookPicked(Look.JARVIS),
+        R.string.look_cyberpunk to HomeEvent.LookPicked(Look.CYBERPUNK),
+        R.string.look_marauder to HomeEvent.LookPicked(Look.MARAUDER),
+    )
 }
 
 private const val TAG = "Pensieve"
