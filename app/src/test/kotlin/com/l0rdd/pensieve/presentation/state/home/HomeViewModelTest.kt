@@ -97,6 +97,39 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `a favourite moves earlier and later, an app hidden leaves the shelf, each closing the menu`() {
+        shelf.state.value = Shelf(listOf(netflix.id, vlc.id), emptySet(), setOf(netflix.id, vlc.id))
+        val vm = viewModel()
+        vm.dispatch(HomeEvent.AppHeld(vlc.id))
+        assertEquals(HomeMenu.ArrangeApp(vlc.id, "VLC", favorite = true), vm.state.value.menu)
+        vm.dispatch(HomeEvent.Arranged(vlc.id, Arrange.EARLIER))
+        assertEquals(null, vm.state.value.menu)
+        assertEquals(listOf(vlc.id, netflix.id), shelf.state.value.favorites)
+        vm.dispatch(HomeEvent.Arranged(vlc.id, Arrange.LATER))
+        assertEquals(listOf(netflix.id, vlc.id), shelf.state.value.favorites)
+        vm.dispatch(HomeEvent.Arranged(netflix.id, Arrange.HIDE))
+        assertEquals(listOf(vlc.id), shelf.state.value.favorites)
+        assertEquals(setOf(netflix.id), shelf.state.value.hidden)
+    }
+
+    @Test
+    fun `OK held on an app the shelf does not show opens nothing, and BACK closes a menu`() {
+        val vm = viewModel()
+        vm.dispatch(HomeEvent.AppHeld(AppId("gone")))
+        assertEquals(null, vm.state.value.menu)
+        vm.dispatch(HomeEvent.SettingsHeld)
+        vm.dispatch(HomeEvent.MenuClosed)
+        assertEquals(null, vm.state.value.menu)
+    }
+
+    @Test
+    fun `an outlet picked is switched`() {
+        val vm = viewModel()
+        vm.dispatch(HomeEvent.OutletPicked(neon))
+        assertEquals(listOf(neon.id to false), hub.switched)
+    }
+
+    @Test
     fun `the house, cinema mode then the screen`() {
         val vm = viewModel()
         vm.dispatch(HomeEvent.CinemaPicked)

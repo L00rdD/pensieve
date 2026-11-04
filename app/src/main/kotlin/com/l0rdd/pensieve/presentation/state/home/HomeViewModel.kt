@@ -2,6 +2,7 @@ package com.l0rdd.pensieve.presentation.state.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.l0rdd.pensieve.domain.entities.apps.AppId
 import com.l0rdd.pensieve.domain.entities.system.SystemScreen
 import com.l0rdd.pensieve.domain.usecases.NoParam
 import com.l0rdd.pensieve.domain.usecases.apps.MoveFavorite
@@ -43,19 +44,10 @@ class HomeViewModel(private val useCases: HomeUseCases) : ViewModel() {
         val state = _state.value
         when (event) {
             is HomeEvent.AppPicked -> useCases.launchApp(event.id)
-            is HomeEvent.AppHeld -> {
-                val app = (state.apps.favorites + state.apps.others).firstOrNull { it.app.id == event.id } ?: return
-                useCases.markAppSeen(event.id)
-                _state.update { it.copy(menu = HomeMenu.ArrangeApp(event.id, app.app.label, state.apps.favorites.contains(app))) }
-            }
+            is HomeEvent.AppHeld -> openArranging(state, event.id)
             is HomeEvent.Arranged -> {
                 _state.update { it.copy(menu = null) }
-                when (event.arrange) {
-                    Arrange.PIN -> useCases.pinFavorite(event.id)
-                    Arrange.EARLIER -> useCases.moveFavorite(MoveFavorite.Param(event.id, -1))
-                    Arrange.LATER -> useCases.moveFavorite(MoveFavorite.Param(event.id, +1))
-                    Arrange.HIDE -> useCases.hideApp(event.id)
-                }
+                arrange(event.id, event.arrange)
             }
             HomeEvent.MenuClosed -> _state.update { it.copy(menu = null) }
             HomeEvent.ResumePicked -> state.resume?.let { useCases.resumePlayback(it) }
@@ -69,6 +61,22 @@ class HomeViewModel(private val useCases: HomeUseCases) : ViewModel() {
                 _state.update { it.copy(menu = null) }
                 useCases.changeLook(event.look)
             }
+        }
+    }
+
+    /** OK held on an app: it is seen, and its arranging menu opens. */
+    private suspend fun openArranging(state: HomeState, id: AppId) {
+        val app = (state.apps.favorites + state.apps.others).firstOrNull { it.app.id == id } ?: return
+        useCases.markAppSeen(id)
+        _state.update { it.copy(menu = HomeMenu.ArrangeApp(id, app.app.label, state.apps.favorites.contains(app))) }
+    }
+
+    private suspend fun arrange(id: AppId, arrange: Arrange) {
+        when (arrange) {
+            Arrange.PIN -> useCases.pinFavorite(id)
+            Arrange.EARLIER -> useCases.moveFavorite(MoveFavorite.Param(id, -1))
+            Arrange.LATER -> useCases.moveFavorite(MoveFavorite.Param(id, +1))
+            Arrange.HIDE -> useCases.hideApp(id)
         }
     }
 
