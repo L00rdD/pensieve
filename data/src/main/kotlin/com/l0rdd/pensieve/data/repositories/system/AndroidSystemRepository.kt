@@ -20,15 +20,16 @@ class AndroidSystemRepository(
 ) : SystemRepository {
 
     override suspend fun open(screen: SystemScreen) = withContext(Dispatchers.Main) {
-        val intent = when (screen) {
-            SystemScreen.SETTINGS -> Intent(Settings.ACTION_SETTINGS)
-            SystemScreen.PICTURE -> Intent(Settings.ACTION_DISPLAY_SETTINGS)
-            SystemScreen.NETWORK -> Intent(Settings.ACTION_WIFI_SETTINGS)
-            SystemScreen.KEYSTONE -> Intent().setClassName(TV_SETTINGS, "com.jmgo.jmgosettinglib.module.keystone.ManualFittingActivity")
-            SystemScreen.QUICK_PANEL -> Intent(quickPanelAction).setPackage(ownPackage)
-        }
-        if (!apps.start(intent) && screen != SystemScreen.QUICK_PANEL) apps.start(Intent(Settings.ACTION_SETTINGS))
+        if (!apps.start(intentFor(screen)) && screen != SystemScreen.QUICK_PANEL) apps.start(Intent(Settings.ACTION_SETTINGS))
         Unit
+    }
+
+    private fun intentFor(screen: SystemScreen): Intent = when (screen) {
+        SystemScreen.SETTINGS -> Intent(Settings.ACTION_SETTINGS)
+        SystemScreen.PICTURE -> Intent(Settings.ACTION_DISPLAY_SETTINGS)
+        SystemScreen.NETWORK -> Intent(Settings.ACTION_WIFI_SETTINGS)
+        SystemScreen.KEYSTONE -> Intent().setClassName(TV_SETTINGS, "com.jmgo.jmgosettinglib.module.keystone.ManualFittingActivity")
+        SystemScreen.QUICK_PANEL -> Intent(quickPanelAction).setPackage(ownPackage)
     }
 
     private companion object {
