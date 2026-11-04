@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Pensieve · La Carte du Maraudeur — maquette</title>
+<style>
+  @font-face { font-family: Fell; src: url("../app/src/main/res/font/im_fell.ttf"), local("IM FELL English Roman"); }
+  @font-face { font-family: FellItalic; src: url("../app/src/main/res/font/im_fell_italic.ttf"), local("IM FELL English Italic"); }
+  :root {
+    --ink: #3f210b; --muted: #74471f; --red: #9c1f12; --paper: #f6dda6;
+    --news-ink: #2a1608; --newsprint: #f2dfb6;
+  }
+  html, body { margin: 0; height: 100%; background: #120a04; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; font-family: Fell, serif; color: var(--ink); }
+  .abs { position: absolute; }
+  canvas { display: block; }
+  :focus { outline: none; }
+
+  /* header */
+  #header { left: 60px; top: 18px; width: 1800px; height: 64px; display: flex; align-items: center; }
+  #brand { font: 36px FellItalic, serif; letter-spacing: .03em; color: var(--ink); white-space: nowrap; }
+  #oath { flex: 1; margin-left: 28px; font: 27px FellItalic, serif; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #time { margin-right: 22px; font: 34px Fell, serif; letter-spacing: .05em; color: var(--ink); }
+
+  .ink-btn { font: 21px Fell, serif; letter-spacing: .08em; padding: 8px 24px; color: var(--c, var(--ink)); border: 2px solid var(--c, var(--ink));
+    background: transparent; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; cursor: pointer; transition: transform .16s; box-sizing: border-box; }
+  .ink-btn.focus { background: var(--red); border-color: var(--red); color: #f6e7c2; transform: rotate(-1deg) scale(1.05); }
+
+  /* labels */
+  .label { display: flex; align-items: center; }
+  .label .fleuron { font: 22px Fell, serif; color: var(--ink); }
+  .label .title { font: 25px Fell, serif; color: var(--red); letter-spacing: .16em; padding: 0 14px; text-transform: uppercase; }
+  .label .sub { font: 24px FellItalic, serif; color: var(--muted); padding-right: 14px; }
+  .label .dash { flex: 1; height: 1.2px; background: repeating-linear-gradient(90deg, rgba(63,33,11,.55) 0 7px, transparent 7px 13px); }
+
+  /* rail */
+  #rail { left: 60px; top: 108px; width: 410px; height: 900px; display: flex; flex-direction: column; }
+  #clock { height: 452px; display: flex; flex-direction: column; align-items: center; }
+  #words { font: 34px FellItalic, serif; color: var(--ink); text-align: center; }
+  #digits { font: 16px Fell, serif; color: var(--red); letter-spacing: .2em; margin-top: 2px; }
+  #date { font: 22px FellItalic, serif; color: var(--muted); margin-top: 4px; }
+  #rail .label { margin: 10px 0 14px; }
+  .action { height: 84px; margin-bottom: 14px; cursor: pointer; }
+
+  /* page */
+  #scroll { left: 510px; top: 92px; width: 1410px; height: 928px; overflow: hidden; }
+  #page { padding: 24px 60px 90px 22px; }
+  #page > .label { margin-bottom: 16px; }
+  .row { display: flex; gap: 20px; }
+  .row + .row { margin-top: 22px; }
+  .room { flex: 1; position: relative; cursor: pointer; transition: transform .18s; }
+  .room.focus { transform: rotate(-.6deg) scale(1.03) translateY(-3px); }
+  .room canvas { position: absolute; left: 0; top: 0; }
+
+  /* the Gazette */
+  #hero { position: relative; height: 318px; margin-bottom: 30px; transform: rotate(-.35deg); background: var(--newsprint); color: var(--news-ink); }
+  #photo { position: absolute; left: 18px; top: 16px; width: 200px; height: 236px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--news-ink); }
+  #photo svg { width: 100%; height: 100%; filter: grayscale(1) sepia(.35) contrast(1.1); animation: gazette 28s ease-in-out infinite alternate; transform-origin: 0 0; }
+  @keyframes gazette { from { transform: scale(1) translateX(0); } to { transform: scale(1.04) translateX(-3px); } }
+  #photo::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 1px 1px, rgba(30,20,10,.22) 1px, transparent 1.3px) 0 0 / 4px 4px; box-shadow: inset 0 0 0 1px var(--news-ink); }
+  #caption { position: absolute; left: 18px; top: 258px; font: 15px FellItalic, serif; }
+  #topRule { position: absolute; left: 246px; right: 24px; top: 18px; height: 4px; background: var(--news-ink); }
+  #special, #weekday { position: absolute; top: 31px; font: 15px FellItalic, serif; }
+  #special { left: 246px; } #weekday { right: 24px; }
+  #masthead { position: absolute; left: 246px; right: 24px; top: 24px; text-align: center; font: 27px Fell, serif; letter-spacing: .06em; }
+  #dbl { position: absolute; left: 246px; right: 24px; top: 56px; height: 4px; border-top: 1px solid var(--news-ink); border-bottom: 1px solid var(--news-ink); box-sizing: border-box; }
+  #headline { position: absolute; left: 246px; right: 24px; top: 70px; font: 42px/1.17 Fell, serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  #deck { position: absolute; left: 246px; right: 24px; font: 22px FellItalic, serif; color: #3a2e20; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #body { position: absolute; left: 246px; right: 24px; font: 16px/20px Fell, serif; color: #2a2218; column-count: 2; column-gap: 26px; column-rule: 1px solid var(--news-ink); height: 60px; overflow: hidden; column-fill: auto; }
+  #heroButtons { position: absolute; left: 246px; top: 248px; display: flex; gap: 14px; }
+  #heroButtons .ink-btn { height: 50px; --c: var(--news-ink); }
+  #pin { position: absolute; left: calc(50% - 8px); top: -4px; width: 16px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 5px 6px, #e0605a 0, #8c1d22 60%, #4a0c10 100%); box-shadow: 1px 2px 3px rgba(40,10,0,.4); }
+
+  #hint { left: 60px; top: 1028px; width: 1800px; height: 40px; font: 23px FellItalic, serif; color: var(--ink); text-shadow: 0 0 8px rgba(250,225,175,.9), 0 0 4px rgba(250,225,175,.9); }
+  #hint b { font-family: Fell, serif; font-weight: normal; letter-spacing: .04em; }
+  #edges { left: 0; top: 0; pointer-events: none; }
+
+  /* menus over the page */
+  #menu { position: absolute; inset: 0; background: rgba(70,26,5,.5); display: none; align-items: center; justify-content: center; }
+  #menu.open { display: flex; }
+  #menuPanel { background: rgba(242,223,182,.96); border: 2px solid var(--red); padding: 34px 40px; display: flex; flex-direction: column; min-width: 420px; }
+  #menuPanel div { font: 32px Fell, serif; letter-spacing: .02em; padding: 14px 24px; color: var(--ink); cursor: pointer; }
+  #menuPanel div.head { color: var(--red); cursor: default; }
+  #menuPanel div.focus { background: var(--red); color: #f2dfb6; }
+
+  #help { position: fixed; right: 12px; bottom: 10px; font: 13px -apple-system, sans-serif; color: #b89a6e; opacity: .7; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="map" class="abs" width="3840" height="2160" style="width:1920px;height:1080px"></canvas>
+
+  <div id="header" class="abs">
+    <div id="brand">La Carte du Maraudeur</div>
+    <div id="oath">« Je jure solennellement que mes intentions sont mauvaises. »</div>
+    <div id="time">--:--</div>
+    <div id="gear" class="ink-btn focusable" data-hint="<b>OK</b> paramètres du projecteur · <b>OK long</b> changer de look">⚙ Paramètres</div>
+  </div>
+
+  <div id="rail" class="abs">
+    <div id="clock">
+      <canvas id="turner"></canvas>
+      <div id="words"></div>
+      <div id="digits"></div>
+      <div id="date"></div>
+    </div>
+    <div class="label"><span class="fleuron">❦</span><span class="title">Maison</span><span class="dash"></span></div>
+    <div id="house"></div>
+  </div>
+
+  <div id="scroll" class="abs">
+    <div id="page">
+      <div class="label"><span class="fleuron">❦</span><span class="title">Reprendre</span><span class="dash"></span></div>
+      <div id="hero">
+        <div id="photo">
+          <!-- a still of the film, for the Gazette's moving photo -->
+          <svg viewBox="0 0 200 236" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="sky" cx=".5" cy=".25" r=".8"><stop offset="0" stop-color="#f4f0e4"/><stop offset=".55" stop-color="#9aa0a8"/><stop offset="1" stop-color="#2c2f36"/></radialGradient>
+            </defs>
+            <rect width="200" height="236" fill="url(#sky)"/>
+            <circle cx="138" cy="52" r="22" fill="#fbfaf2"/>
+            <path d="M0 170 Q40 150 80 162 T200 150 V236 H0Z" fill="#3a3c40"/>
+            <path d="M18 236 V120 l10 -18 10 18 V140 h14 V96 l12 -26 12 26 V150 h10 V118 l9 -16 9 16 V236Z" fill="#1d1f24"/>
+            <path d="M120 236 c4 -40 8 -64 22 -78 c-6 -12 -2 -26 10 -28 c12 2 16 16 10 28 c14 14 18 38 22 78Z" fill="#111317"/>
+            <path d="M152 130 l-3 -20 l8 -6 l6 6 l-3 20" fill="#111317"/>
+            <path d="M176 164 l18 -40" stroke="#111317" stroke-width="3"/>
+          </svg>
+        </div>
+        <div id="caption">Photographié sur le plateau.</div>
+        <div id="topRule"></div>
+        <div id="special">Édition spéciale</div>
+        <div id="masthead">La Gazette du Sorcier</div>
+        <div id="weekday"></div>
+        <div id="dbl"></div>
+        <div id="headline"></div>
+        <div id="deck"></div>
+        <div id="body"></div>
+        <div id="heroButtons">
+          <div id="resume" class="ink-btn focusable">Reprendre la lecture</div>
+          <div id="restart" class="ink-btn focusable" data-hint="<b>OK</b> depuis le début">Depuis le début</div>
+        </div>
+        <div id="pin"></div>
+      </div>
+      <div class="label"><span class="fleuron">❦</span><span class="title">Favoris</span><span class="sub">dans l'ordre que tu choisis</span><span class="dash"></span></div>
+      <div id="favorites" style="margin-bottom:30px"></div>
+      <div class="label"><span class="fleuron">❦</span><span class="title">Toutes les applis</span><span class="dash"></span></div>
+      <div id="others"></div>
+    </div>
+  </div>
+
+  <div id="hint" class="abs"></div>
+  <canvas id="edges" class="abs" width="1920" height="1080"></canvas>
+  <canvas id="neva" class="abs" style="left:0;top:826px;pointer-events:none;visibility:hidden"></canvas>
+  <div id="menu"><div id="menuPanel"></div></div>
+</div>
+<div id="help">← ↑ → ↓ se déplacer · Entrée OK · Entrée maintenue (ou clic droit) OK long · Échap retour · N Neva (1 balade, 2 laser, 3 papillon, 4 zoomies)</div>
+
+<script>
+const INK = '#3f210b', MUTED = '#74471f', RED = '#9c1f12', NEWS_INK = '#2a1608', NEWSPRINT = '#f2dfb6';
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function hidpi(cv, w, h, k = 2) { cv.width = Math.round(w * k); cv.height = Math.round(h * k); cv.style.width = w + 'px'; cv.style.height = h + 'px'; const c = cv.getContext('2d'); c.setTransform(k, 0, 0, k, 0, 0); return c; }
+
+/* ---------- the French time, as FrenchTime says it ---------- */
+const NUM = ['zéro','une','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt','vingt et une','vingt-deux','vingt-trois','vingt-quatre','vingt-cinq','vingt-six','vingt-sept','vingt-huit','vingt-neuf'];
+const masc = w => w.replace(/une$/, 'un');
+function inWords(hour, minute) {
+  let next = false, m = '';
+  if (minute === 0) {} else if (minute === 15) m = ' et quart'; else if (minute === 30) m = ' et demie';
+  else if (minute === 45) { next = true; m = ' moins le quart'; } else if (minute > 30) { next = true; m = ' moins ' + masc(NUM[60 - minute]); } else m = ' ' + masc(NUM[minute]);
+  const h = (hour + (next ? 1 : 0)) % 24;
+  return (h === 0 ? 'minuit' : h === 12 ? 'midi' : h % 12 === 1 ? 'une heure' : NUM[h % 12] + ' heures') + m;
+}
+const hm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+const longDate = d => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/* ---------- sample state ---------- */
+const RESUME = { series: 'Harry Potter', title: "Le Prisonnier d'Azkaban", position: 72, runtime: 142, year: 2004, genre: 'Fantastique',
+  overview: "Pour sa troisième année à Poudlard, Harry apprend que Sirius Black, évadé d'Azkaban, serait à sa recherche. Les Détraqueurs gardent désormais le château, la carte d'un certain Lunard, Queudver, Patmol et Cornedrue change de mains, et le temps lui-même se met à tourner." };
+const FAVORITES = [
+  { label: 'Jellyfin', id: 'org.jellyfin.androidtv', bg: ['#aa5cc3', '#00a4dc'], fg: '#fff' },
+  { label: 'Netflix', id: 'com.netflix.ninja', bg: ['#141414', '#141414'], fg: '#e50914' },
+  { label: 'YouTube', id: 'com.google.android.youtube.tv', bg: ['#fff', '#f2f2f2'], fg: '#ff0000' },
+  { label: 'Disney+', id: 'com.disney.disneyplus', bg: ['#0b1d6e', '#113ccf'], fg: '#fff' },
+  { label: 'Prime Video', id: 'com.amazon.amazonvideo.livingroom', bg: ['#0f171e', '#1a2a38'], fg: '#00a8e1' },
+];
+const OTHERS = [
+  { label: 'Arte', bg: ['#fa481c', '#fa481c'], fg: '#fff' }, { label: 'france.tv', bg: ['#1d1d1b', '#2b2b2b'], fg: '#fff' },
+  { label: 'Spotify', bg: ['#121212', '#121212'], fg: '#1db954' }, { label: 'Twitch', bg: ['#9146ff', '#772ce8'], fg: '#fff' },
+  { label: 'Crunchyroll', bg: ['#f47521', '#f47521'], fg: '#fff', isNew: true }, { label: 'Plex', bg: ['#1f2326', '#282a2d'], fg: '#e5a00d' },
+  { label: 'VLC', bg: ['#ff8800', '#e85e00'], fg: '#fff' }, { label: 'Kodi', bg: ['#17b2e7', '#0f7fb0'], fg: '#fff' },
+  { label: 'Molotov', bg: ['#111', '#222'], fg: '#fff' }, { label: 'Play Store', bg: ['#fff', '#f1f3f4'], fg: '#01875f', store: true },
+];
+const HOUSE = { reachable: true, cinema: false, outlets: [{ name: 'Néon', on: true }, { name: 'Lampe du salon', on: false }], screen: { down: false, moving: null } };
+
+/* ---------- the stage, scaled to the window ---------- */
+const stage = document.getElementById('stage');
+let SCALE = 1;
+function fit() {
+  SCALE = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = `translate(${(innerWidth - 1920 * SCALE) / 2}px, ${(innerHeight - 1080 * SCALE) / 2}px) scale(${SCALE})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ---------- the map: parchment and castle drawn once, walkers and footsteps live ---------- */
+const mapCv = document.getElementById('map'), mc = mapCv.getContext('2d');
+const paper = document.createElement('canvas');
+function drawParchment() {
+  const W = 1920, H = 1080; const c = hidpi(paper, W, H);
+  let g = c.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, W * .62);
+  [[0, '#f6dda6'], [.52, '#e7bf7c'], [.88, '#c58a43'], [1, '#9a5e24']].forEach(([o, col]) => g.addColorStop(o, col));
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  [[.18, .72, 170, .22], [.82, .22, 130, .18], [.63, .88, 210, .2], [.4, .15, 230, .14]].forEach(([x, y, r, a]) => {
+    g = c.createRadialGradient(x * W, y * H, 0, x * W, y * H, r); g.addColorStop(0, rgba('#96501e', a)); g.addColorStop(1, 'rgba(150,80,30,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(x * W, y * H, r, 0, 7); c.fill();
+  });
+  [W / 3, W * 2 / 3].forEach(x => {
+    g = c.createLinearGradient(x - 14, 0, x + 14, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.45, rgba('#5a3c14', .2)); g.addColorStop(.55, rgba('#fffae6', .3)); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.fillRect(x - 14, 0, 28, H);
+  });
+  g = c.createLinearGradient(0, H / 2 - 12, 0, H / 2 + 12);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.45, rgba('#5a3c14', .16)); g.addColorStop(.55, rgba('#fffae6', .24)); g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = g; c.fillRect(0, H / 2 - 12, W, 24);
+  const r = seeded(9);
+  for (let i = 0; i < 26000; i++) { c.fillStyle = rgba(r() < .5 ? '#6b3a10' : '#fff4d8', r() * .09); c.fillRect(r() * W, r() * H, 1.6, 1.6); }
+  // the castle
+  const q = seeded(5);
+  c.strokeStyle = rgba('#5a2d0a', .24); c.lineWidth = 2;
+  for (let i = 0; i < 26; i++) { const x = q() * 1800, y = q() * 1000, rw = 80 + q() * 220, rh = 60 + q() * 160; c.strokeRect(x, y, rw, rh); if (q() < .4) c.strokeRect(x + 5, y + 5, rw - 10, rh - 10); }
+  c.lineWidth = 1.4; c.beginPath();
+  for (let i = 0; i < 34; i++) { const x = q() * W, y = q() * H, len = 200 + q() * 600;
+    if (q() < .5) { c.moveTo(x, y); c.lineTo(x + len, y); c.moveTo(x, y + 26); c.lineTo(x + len, y + 26); } else { c.moveTo(x, y); c.lineTo(x, y + len); c.moveTo(x + 26, y); c.lineTo(x + 26, y + len); } }
+  for (let i = 0; i < 8; i++) { const x = q() * 1850, y = q() * 1020; for (let k = 0; k < 9; k++) { c.moveTo(x + k * 7, y); c.lineTo(x + k * 7, y + 40); } }
+  c.stroke();
+  c.fillStyle = rgba('#3a2312', .35); c.font = '20px FellItalic, serif';
+  [['Grande Salle', 380, 250], ["Tour d'astronomie", 1500, 140], ['Cachots', 260, 980], ['Bibliothèque', 1640, 900], ['Saule cogneur', 1180, 1040]].forEach(([t, x, y]) => c.fillText(t, x, y));
+}
+
+const rnd = seeded(5);
+const people = ['Rusard', 'Miss Teigne', 'Peeves', 'Albus Dumbledore'].map(name => ({ name, x: rnd() * 1920, y: rnd() * 1080, tx: rnd() * 1920, ty: rnd() * 1080, d: 0, trail: [] }));
+let walk = null, walkT = 0, tick = 1;
+
+function step(c, x, y, angle, left, alpha, scale) {
+  c.fillStyle = rgba(INK, alpha);
+  c.save(); c.translate(x, y); c.rotate(angle); c.scale(scale, scale); c.translate(0, left ? -7 : 7);
+  c.beginPath(); c.ellipse(0, 0, 7, 3.6, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(-8.5, 0, 3, 2.8, 0, 0, 7); c.fill();
+  c.restore();
+}
+
+/** Footsteps from the door of `from` (bottom middle), along its corridor, down the aisle beside `to`, to its door. */
+function startWalk(from, to) {
+  const g = 9, ax = from.x + from.w / 2, ay = from.y + from.h + g, bx = to.x + to.w / 2, by = to.y + to.h + g;
+  const vx = (bx > ax || Math.abs(bx - ax) < 4) ? to.x - g : to.x + to.w + g;
+  walk = Math.abs(ay - by) < 4 ? [[ax, ay], [bx, by]] : [[ax, ay], [vx, ay], [vx, by], [bx, by]];
+  walkT = 0;
+}
+
+function drawMap(dt) {
+  people.forEach(p => {
+    const dx = p.tx - p.x, dy = p.ty - p.y, dist = Math.hypot(dx, dy);
+    if (dist < 10) { p.tx = rnd() * 1920; p.ty = rnd() * 1080; }
+    const v = 22 * dt; p.x += dx / dist * v; p.y += dy / dist * v; p.d += v;
+    if (p.d > 18) { p.d = 0; p.trail.push([p.x, p.y, Math.atan2(dy, dx), p.trail.length % 2]); if (p.trail.length > 10) p.trail.shift(); }
+  });
+  if (walk) { walkT += dt; if (walkT > 4.5) walk = null; }
+  tick += dt;
+  if (!(walk || tick >= .125)) return;
+  tick = 0;
+  const c = mc; c.setTransform(2, 0, 0, 2, 0, 0);
+  c.drawImage(paper, 0, 0, 1920, 1080);
+  c.font = '17px FellItalic, serif'; c.textAlign = 'center';
+  people.forEach(p => {
+    p.trail.forEach((f, k) => step(c, f[0], f[1], f[2], f[3] > 0, .08 + .5 * k / p.trail.length, 1));
+    const w = c.measureText(p.name).width + 16;
+    c.fillStyle = rgba('#f6e7c2', .6); c.fillRect(p.x - w / 2, p.y + 14, w, 22);
+    c.strokeStyle = rgba(INK, .5); c.lineWidth = 1.2; c.strokeRect(p.x - w / 2, p.y + 14, w, 22);
+    c.fillStyle = rgba(INK, .65); c.fillText(p.name, p.x, p.y + 31);
+  });
+  if (walk) {
+    const pts = walk; let total = 0; for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    const steps = Math.max(2, total / 20); let n = 0;
+    outer: for (let i = 1; i < pts.length; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
+      for (let d = n > 0 ? 10 : 0; d < len; d += 20, n++) {
+        const age = walkT - n / steps * 1.1; if (age < 0) break outer;
+        const a = .9 - Math.max(0, age - 1.6) * .6;
+        if (a > 0) step(c, x0 + (x1 - x0) * d / len, y0 + (y1 - y0) * d / len, ang, n % 2 === 1, a, .85);
+      }
+    }
+  }
+}
+
+/* ---------- burnt edges ---------- */
+(function edges() {
+  const cv = document.getElementById('edges'), c = cv.getContext('2d'), w = 1920, h = 1080;
+  const g = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * .62);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.72, 'rgba(0,0,0,0)'); g.addColorStop(.9, rgba('#6e320a', .35)); g.addColorStop(1, rgba('#461a05', .72));
+  c.save(); c.translate(w / 2, h / 2); c.scale(1, h / w * 1.1); c.translate(-w / 2, -h / 2); c.fillStyle = g; c.fillRect(0, -h, w, h * 3); c.restore();
+})();
+
+/* ---------- Hermione's Time-Turner ---------- */
+const turnerCv = document.getElementById('turner'), tc = hidpi(turnerCv, 320, 336);
+const INSCRIPTION = 'JE MARQUE LES HEURES, UNE À UNE · ET JAMAIS NE DEVANCE LE SOLEIL · MON PRIX EST CE QUE TU EN FAIS ·';
+const ROMAN = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+function drawTurner(t, now) {
+  const c = tc, cx = 200, cy = 236; c.save(); c.clearRect(0, 0, 320, 336); c.scale(.8, .8);
+  const hour = now.getHours() % 12, progress = (now.getMinutes() * 60 + now.getSeconds()) / 3600;
+  const gold = c.createLinearGradient(0, 60, 400, 420);
+  ['#ffe7a3', '#b8862f', '#f6d27a', '#8f6220', '#e8b95a'].forEach((col, i) => gold.addColorStop(i / 4, col));
+  c.strokeStyle = gold; c.lineWidth = 3;
+  for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(200, 8 + k * 11, k % 2 ? 3 : 6, 7, 0, 0, 7); c.stroke(); }
+  const glow = c.createRadialGradient(cx, cy, 0, cx, cy, 178); glow.addColorStop(0, rgba('#ffd27a', .5)); glow.addColorStop(1, 'rgba(255,210,122,0)');
+  c.fillStyle = glow; c.beginPath(); c.arc(cx, cy, 178, 0, 7); c.fill();
+  // the outer ring, engraved, turning
+  c.save(); c.translate(cx, cy); c.rotate(t * 4 * Math.PI / 180); c.translate(-cx, -cy);
+  c.lineWidth = 26; c.beginPath(); c.arc(cx, cy, 166, 0, 7); c.stroke();
+  c.strokeStyle = '#6b4512'; c.lineWidth = 1.2; c.beginPath(); c.arc(cx, cy, 179, 0, 7); c.stroke(); c.beginPath(); c.arc(cx, cy, 153, 0, 7); c.stroke();
+  c.fillStyle = '#4a2c0c'; c.font = '15.5px Fell, serif'; c.textAlign = 'left';
+  let a = 0; for (const ch of INSCRIPTION) { const w = c.measureText(ch).width + 1.55;
+    c.save(); c.translate(cx + 160 * Math.cos(a), cy + 160 * Math.sin(a)); c.rotate(a + Math.PI / 2); c.fillText(ch, 0, 0); c.restore(); a += w / 160; }
+  c.restore();
+  // the hours
+  c.fillStyle = rgba('#46280a', .08); c.beginPath(); c.arc(cx, cy, 146, 0, 7); c.fill();
+  c.strokeStyle = '#6b4512'; c.lineWidth = 1; c.stroke();
+  c.textAlign = 'center';
+  ROMAN.forEach((r, i) => { const an = i * Math.PI / 6; c.fillStyle = i === hour ? RED : '#4a2c0c'; c.font = (i === hour ? 21 : 17) + 'px Fell, serif';
+    c.fillText(r, cx + Math.sin(an) * 130, cy + 6 - Math.cos(an) * 130); });
+  // the inner rings, turning on themselves
+  c.strokeStyle = gold;
+  [[112, 7], [96, -11]].forEach(([radius, period]) => { c.save(); c.translate(cx, cy); c.scale(Math.cos(t / period * 2 * Math.PI), 1); c.translate(-cx, -cy);
+    c.lineWidth = radius > 100 ? 9 : 6; c.beginPath(); c.arc(cx, cy, radius, 0, 7); c.stroke(); c.restore(); });
+  // the hourglass, emptying as the hour goes by
+  c.fillStyle = gold; c.beginPath(); c.roundRect(160, 150, 80, 9, 3); c.roundRect(160, 313, 80, 9, 3); c.fill();
+  const glass = new Path2D('M167 159 L233 159 L204 234 L204 238 L233 313 L167 313 L196 238 L196 234 Z');
+  c.fillStyle = rgba('#fff6dd', .3); c.fill(glass); c.strokeStyle = '#8f6220'; c.lineWidth = 1.4; c.stroke(glass);
+  const top = 70 * (1 - progress), hw = 33 * top / 75;
+  c.fillStyle = '#d9a441'; if (top > 1) { c.beginPath(); c.moveTo(200 - hw, 234 - top); c.lineTo(200 + hw, 234 - top); c.lineTo(201, 234); c.lineTo(199, 234); c.fill(); }
+  const pile = 64 * Math.sqrt(progress), pw = 33 * (1 - pile / 75);
+  c.fillStyle = '#c98f2e'; c.beginPath(); c.moveTo(167, 313); c.lineTo(233, 313); c.lineTo(200 + pw, 313 - pile); c.quadraticCurveTo(200, 313 - pile - 6, 200 - pw, 313 - pile); c.fill();
+  c.fillStyle = '#d9a441'; for (let y = 236 + (t * 10 % 6); y < 313 - pile - 4; y += 6) c.fillRect(199.2, y, 1.6, 3);
+  c.strokeStyle = gold; c.lineWidth = 3; c.beginPath(); c.moveTo(163, 159); c.lineTo(163, 313); c.moveTo(237, 159); c.lineTo(237, 313); c.stroke();
+  c.restore();
+}
+
+/* ---------- the house, as the Gazette's small ads ---------- */
+const houseEl = document.getElementById('house');
+const houseTiles = [];
+function actionTile() {
+  const el = document.createElement('div'); el.className = 'action focusable'; houseEl.appendChild(el);
+  const cv = document.createElement('canvas'); el.appendChild(cv);
+  const tile = { el, cv, title: '', detail: '', state: '', glyph: '' };
+  tile.draw = () => {
+    const w = 410, h = 84, c = hidpi(cv, w, h), f = el.classList.contains('focus');
+    c.fillStyle = f ? '#f8e8c4' : NEWSPRINT; c.fillRect(0, 0, w, h);
+    const ink = f ? RED : NEWS_INK; c.strokeStyle = ink; c.lineWidth = 1;
+    c.strokeRect(.5, .5, w - 1, h - 1); c.strokeRect(4.5, 4.5, w - 9, h - 9);
+    c.fillStyle = ink; c.font = '23px Fell, serif'; c.letterSpacing = '2.3px';
+    c.fillText(tile.glyph, 34, h / 2 + 9); c.fillText(tile.title.toUpperCase(), 80, 38);
+    c.letterSpacing = '0px'; c.fillStyle = MUTED; c.font = '21px FellItalic, serif'; c.fillText(tile.detail, 80, 66);
+    if (tile.state) {
+      c.save(); c.translate(w - 60, h / 2); c.rotate(-7 * Math.PI / 180); c.translate(-(w - 60), -h / 2);
+      c.font = '16px Fell, serif'; c.letterSpacing = '1.3px'; const sw = c.measureText(tile.state).width + 16;
+      c.strokeStyle = RED; c.lineWidth = 2; c.strokeRect(w - 30 - sw, h / 2 - 15, sw, 27);
+      c.fillStyle = RED; c.fillText(tile.state, w - 22 - sw, h / 2 + 5); c.restore();
+    }
+  };
+  tile.show = (title, detail, state, glyph) => Object.assign(tile, { title, detail, state, glyph }).draw();
+  houseTiles.push(tile); return tile;
+}
+function showHouse() {
+  if (!houseTiles.length) {
+    const cinema = actionTile(); cinema.el.dataset.hint = '<b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer';
+    cinema.el.onok = () => { HOUSE.cinema = !HOUSE.cinema; HOUSE.outlets.forEach(o => o.on = !HOUSE.cinema && o.name === 'Néon'); moveScreen(HOUSE.cinema); showHouse(); };
+    HOUSE.outlets.forEach(o => { const t = actionTile(); t.el.dataset.hint = '<b>OK</b> allumer ou éteindre'; t.el.onok = () => { o.on = !o.on; showHouse(); }; });
+    const s = actionTile(); s.el.dataset.hint = "<b>OK</b> monter ou descendre l'écran"; s.el.onok = () => moveScreen(!HOUSE.screen.down);
+  }
+  houseTiles[0].show('Mode cinéma', 'lampes éteintes, écran en bas', HOUSE.cinema ? 'ON' : '', '◐');
+  HOUSE.outlets.forEach((o, i) => houseTiles[1 + i].show(o.name, o.on ? 'allumé' : 'éteint', o.on ? 'ON' : 'OFF', '✦'));
+  const sc = HOUSE.screen;
+  houseTiles.at(-1).show('Écran', 'projection', sc.moving ? 'EN ROUTE' : sc.down ? '▼ BAS' : '▲ HAUT', '▤');
+}
+function moveScreen(down) {
+  if (HOUSE.screen.down === down) return;
+  HOUSE.screen.moving = true; showHouse();
+  setTimeout(() => { HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }, 2200);
+}
+
+/* ---------- the rooms of the castle ---------- */
+function room(app, big) {
+  const el = document.createElement('div'); el.className = 'room focusable';
+  el.dataset.hint = app.store ? '<b>OK</b> ouvrir le Play Store pour ajouter une appli' : '<b>OK</b> ouvrir · <b>OK long</b> favori, déplacer, masquer';
+  const cv = document.createElement('canvas'); el.appendChild(cv);
+  el.redraw = () => {
+    const w = el.offsetWidth, h = el.offsetHeight, c = hidpi(cv, w, h), f = el.classList.contains('focus');
+    c.fillStyle = f ? 'rgba(250,232,192,.97)' : 'rgba(246,222,172,.88)'; c.fillRect(0, 0, w, h);
+    const ink = f ? RED : INK, door = w * .24, dl = (w - door) / 2, dr = dl + door;
+    const walls = (l, r, b) => { c.beginPath(); c.moveTo(dl, b); c.lineTo(l, b); c.lineTo(l, l); c.lineTo(r, l); c.lineTo(r, b); c.lineTo(dr, b); c.stroke(); };
+    c.strokeStyle = ink; c.lineWidth = 2.4; walls(1.2, w - 1.2, h - 1.2); c.lineWidth = 1.1; walls(6, w - 6, h - 6);
+    c.beginPath(); c.moveTo(dl, h - 6); c.lineTo(dl, h); c.moveTo(dr, h - 6); c.lineTo(dr, h); c.stroke();
+    if (big) { artwork(c, app, w - 150, 16, 132, 72);
+      c.fillStyle = ink; c.font = '24px FellItalic, serif'; c.fillText(app.label, 22, h - 52);
+      c.fillStyle = app.isNew ? RED : MUTED; c.font = '20px FellItalic, serif'; c.fillText(app.isNew ? 'nouveau' : app.id.split('.').pop(), 22, h - 24);
+    } else { artwork(c, app, 22, 14, w - 44, h - 60);
+      c.fillStyle = ink; c.font = '20px FellItalic, serif'; c.textAlign = 'center'; c.fillText(app.label, w / 2, h - 18); c.textAlign = 'left'; }
+    if (app.isNew) { c.fillStyle = RED; c.font = '20px FellItalic, serif'; c.fillText('nouveau', w - 82, h - 14); }
+    if (f) { c.font = '19px FellItalic, serif'; const tw = c.measureText(app.label).width + 24;
+      c.fillStyle = '#f6e7c2'; c.fillRect(w / 2 - tw / 2, 0, tw, 26); c.strokeStyle = INK; c.lineWidth = 1.5; c.strokeRect(w / 2 - tw / 2, 0, tw, 26);
+      c.fillStyle = INK; c.textAlign = 'center'; c.fillText(app.label, w / 2, 20); c.textAlign = 'left'; }
+  };
+  return el;
+}
+/** The app's banner, fitted 16:9 in its box (a stand-in for the real artwork). */
+function artwork(c, app, x, y, w, h) {
+  let bw = w, bh = w * 9 / 16; if (bh > h) { bh = h; bw = h * 16 / 9; }
+  const bx = x + (w - bw) / 2, by = y + (h - bh) / 2, g = c.createLinearGradient(bx, by, bx + bw, by + bh);
+  g.addColorStop(0, app.bg[0]); g.addColorStop(1, app.bg[1]);
+  c.fillStyle = g; c.beginPath(); c.roundRect(bx, by, bw, bh, 6); c.fill();
+  c.fillStyle = app.fg; c.font = `600 ${Math.round(bh * .26)}px -apple-system, Helvetica, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(app.label, bx + bw / 2, by + bh / 2); c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+}
+function grid(into, apps, columns, height, big) {
+  for (let i = 0; i < apps.length; i += columns) {
+    const row = document.createElement('div'); row.className = 'row'; row.style.height = height + 'px';
+    apps.slice(i, i + columns).forEach(a => row.appendChild(room(a, big)));
+    for (let k = apps.slice(i, i + columns).length; k < columns; k++) row.appendChild(Object.assign(document.createElement('div'), { style: 'flex:1' }));
+    into.appendChild(row);
+  }
+}
+grid(document.getElementById('favorites'), FAVORITES, 5, 176, true);
+grid(document.getElementById('others'), OTHERS, 6, 128, false);
+
+/* ---------- the Gazette's front page ---------- */
+const clock2 = m => Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+document.getElementById('resume').dataset.hint = `<b>OK</b> reprendre à ${clock2(RESUME.position)}`;
+function showHero(now) {
+  const r = RESUME, head = document.getElementById('headline'), deck = document.getElementById('deck'), body = document.getElementById('body');
+  head.textContent = `${[r.series, r.title].filter(Boolean).join(' · ')} : la projection interrompue à ${inWords(Math.floor(r.position / 60), r.position % 60)}`;
+  const end = new Date(now.getTime() + (r.runtime - r.position) * 60000);
+  deck.textContent = `Le film reprendra où vous l'avez laissé ; fin annoncée vers ${inWords(end.getHours(), end.getMinutes())}.`;
+  body.textContent = `${r.year} · ${r.runtime} minutes · ${r.genre}. ${r.overview}`;
+  const top = 76 + head.offsetHeight; deck.style.top = top + 'px'; body.style.top = (top + 32) + 'px';
+  document.getElementById('weekday').textContent = longDate(now).split(' ')[0];
+}
+
+/* ---------- focus, the remote's way ---------- */
+const scroll = document.getElementById('scroll'), hintEl = document.getElementById('hint');
+let focused = null, lastRect = null;
+function layoutRect(el) {
+  let x = 0, y = 0, e = el;
+  while (e && e !== stage) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
+  if (scroll.contains(el)) y -= scroll.scrollTop;
+  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+}
+function focus(el) {
+  if (!el || el === focused) return;
+  if (focused) { focused.classList.remove('focus'); focused.redraw?.(); houseTiles.find(t => t.el === focused)?.draw(); }
+  focused = el; el.classList.add('focus'); el.redraw?.(); houseTiles.find(t => t.el === el)?.draw();
+  if (scroll.contains(el)) {   // the ScrollView brings the focused child into view
+    let y = 0, e = el; while (e && e !== scroll) { y += e.offsetTop; e = e.offsetParent; }
+    if (el.closest('#hero')) y = 0;
+    const h = el.offsetHeight, margin = 40;
+    if (y - margin < scroll.scrollTop) scroll.scrollTop = Math.max(0, y - margin - 60);
+    else if (y + h + margin > scroll.scrollTop + scroll.clientHeight) scroll.scrollTop = y + h + margin - scroll.clientHeight;
+  }
+  hintEl.innerHTML = el.dataset.hint || '';
+  const rect = layoutRect(el);
+  if (lastRect) startWalk(lastRect, rect);
+  lastRect = rect;
+}
+function move(dir) {
+  const r = layoutRect(focused), cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  let best = null, bestScore = Infinity;
+  document.querySelectorAll('.focusable').forEach(el => {
+    if (el === focused) return;
+    const o = layoutRect(el), ox = o.x + o.w / 2, oy = o.y + o.h / 2;
+    let main, side;
+    if (dir === 'ArrowRight') { if (o.x < r.x + r.w - 4) return; main = o.x - (r.x + r.w); side = Math.abs(oy - cy); }
+    if (dir === 'ArrowLeft') { if (o.x + o.w > r.x + 4) return; main = r.x - (o.x + o.w); side = Math.abs(oy - cy); }
+    if (dir === 'ArrowDown') { if (o.y < r.y + r.h - 4) return; main = o.y - (r.y + r.h); side = Math.abs(ox - cx); }
+    if (dir === 'ArrowUp') { if (o.y + o.h > r.y + 4) return; main = r.y - (o.y + o.h); side = Math.abs(ox - cx); }
+    const score = Math.max(0, main) + side * 1.6;
+    if (score < bestScore) { bestScore = score; best = el; }
+  });
+  focus(best);
+}
+
+/* ---------- OK, OK held, menus ---------- */
+const menu = document.getElementById('menu'), panel = document.getElementById('menuPanel');
+let menuItems = [], menuIndex = 0, menuReturn = null;
+function openMenu(title, items) {
+  menuReturn = focused; panel.innerHTML = `<div class="head">${title}</div>`;
+  menuItems = items.map(([label, act], i) => { const d = document.createElement('div'); d.textContent = label;
+    d.onclick = () => { closeMenu(); act?.(); }; d.onmouseenter = () => menuFocus(i); panel.appendChild(d); return d; });
+  menu.classList.add('open'); menuFocus(0); lastRect = null;
+}
+function menuFocus(i) { menuItems[menuIndex]?.classList.remove('focus'); menuIndex = (i + menuItems.length) % menuItems.length; menuItems[menuIndex].classList.add('focus'); }
+function closeMenu() { menu.classList.remove('open'); menuItems = []; lastRect = menuReturn && layoutRect(menuReturn); }
+function ok(el) {
+  if (el.onok) return el.onok();
+  flash(el);
+}
+function held(el) {
+  if (el.id === 'gear') return openMenu("Look de l'accueil", [['J.A.R.V.I.S.'], ['Cyberpunk'], ['La Carte du Maraudeur']]);
+  if (el.classList.contains('room')) {
+    const fav = !!el.closest('#favorites');
+    openMenu(el.querySelector('canvas') && labelOf(el), [[fav ? 'Retirer des favoris' : 'Mettre en favori'], ['Avancer'], ['Reculer'], ['Masquer'], ['Annuler']]);
+  }
+}
+const labelOf = el => [...FAVORITES, ...OTHERS][[...document.querySelectorAll('.room')].indexOf(el)].label;
+function flash(el) { el.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.25)' }, { filter: 'brightness(1)' }], { duration: 260 }); }
+
+let pressAt = 0, heldFired = false, holdTimer = null;
+addEventListener('keydown', e => {
+  if (menu.classList.contains('open')) {
+    if (e.key === 'ArrowDown') menuFocus(menuIndex + 1);
+    else if (e.key === 'ArrowUp') menuFocus(menuIndex - 1);
+    else if (e.key === 'Enter') menuItems[menuIndex].click();
+    else if (e.key === 'Escape' || e.key === 'Backspace') closeMenu();
+    e.preventDefault(); return;
+  }
+  if (e.key.startsWith('Arrow')) { move(e.key); e.preventDefault(); }
+  if (e.key === 'Enter' && !e.repeat) { heldFired = false; holdTimer = setTimeout(() => { heldFired = true; held(focused); }, 500); }
+});
+addEventListener('keyup', e => { if (e.key === 'Enter') { clearTimeout(holdTimer); if (!heldFired && !menu.classList.contains('open')) ok(focused); } });
+document.querySelectorAll('.focusable').forEach(el => {
+  el.addEventListener('mouseenter', () => { if (!menu.classList.contains('open')) focus(el); });
+  el.addEventListener('click', () => ok(el));
+  el.addEventListener('contextmenu', e => { e.preventDefault(); held(el); });
+});
+menu.addEventListener('click', e => { if (e.target === menu) closeMenu(); });
+
+
+/* ---------- Neva, the house's seal-point cat, as NevaView draws her ---------- */
+const Neva = (() => {
+  const W = 600, H = 250, CAT_X = (W - 260) / 2, TOP = 100, OUT = 160, SPEED = 72, RUN = 340, POUNCE = .55, BUTTERFLY_Y = TOP + 30, BLINK = .15, PI = Math.PI, HEART = '♥';
+  const SAYINGS = ['miaou !', 'mrrp ?', HEART, 'miaou !'];
+  const BELLY = '#eee3d2', BACK = '#cdb394', BIB = '#f5ede0', POINT = '#3b2920', NEAR = '#5a4233', FAR = '#3e2c23', EAR = '#6e5243', MITT = '#f8f4ee',
+    NOSE = '#1f1511', MOUTH = '#c9636e', EYE = '#8ec3ea', PUPIL = '#0e0b0a', WHISKER = 'rgba(255,255,255,.8)', LASER = '#ff2b2b', WING = '#f2a93b', WING_LOW = '#e07a2e';
+  const cv = document.getElementById('neva'), c = hidpi(cv, W, H);
+  const lerp = (a, b, k) => a + (b - a) * k, approach = (v, to, by) => v < to ? Math.min(to, v + by) : Math.max(to, v - by);
+  const R = Math.random, randInt = (a, b) => a + Math.floor(R() * (b - a));
+  let steps = [], away = R() * 5 + 3, x = 0, dir = 1, stride = 0, walking = 0, running = 0, lying = 0, stretch = 0, leap = 0, hop = 0, tilt = 0, blinkIn = 3, t = 0;
+  let prey = null, preyX = 0, preyY = 0, preyFled = false;
+  const Walk = (to, speed = SPEED) => ({ k: 'walk', to, speed }), Pause = (left, say = null) => ({ k: 'pause', left, say }), Nap = left => ({ k: 'nap', left }),
+    Stretch = length => ({ k: 'stretch', length, left: length }), Stalk = left => ({ k: 'stalk', left }), Pounce = (length, height) => ({ k: 'pounce', length, height, p: 0, from: 0 });
+
+  function done() { steps.shift(); if (!steps.length) prey = null; }
+  function plan(kind = randInt(0, 4)) {
+    dir = R() < .5 ? 1 : -1; x = dir > 0 ? -OUT : 1920 + OUT;
+    const exit = dir > 0 ? 1920 + OUT : -OUT, st = randInt(380, 1300), stop = dir > 0 ? st : 1920 - st;
+    prey = null; preyFled = false; steps = [];
+    if (kind === 0) { steps.push(Walk(stop), Pause(R() * 2 + 2.5, SAYINGS[randInt(0, 4)]));
+      if (R() < .5) steps.push(Nap(R() * 10 + 10), Stretch(1.8), Pause(.8)); steps.push(Walk(exit)); }
+    else if (kind === 1) { steps.push(Walk(stop), Pause(.4), Pause(1.2, '!'), Stalk(2), Pounce(150, 34), Walk(exit, RUN)); prey = 'laser'; preyX = stop + dir * 170; }
+    else if (kind === 2) { steps.push(Walk(stop), Pause(1.6), Stalk(1.2), Pounce(150, 80), Pause(2.2, '?'), Walk(exit)); prey = 'butterfly'; preyX = stop + dir * 200; preyY = BUTTERFLY_Y; }
+    else steps.push(Walk(stop, RUN), Pause(1.6, 'mrrp ?'), Stretch(1.4), Walk(exit, RUN));
+    away = R() * 120 + 60;
+  }
+  function movePrey(dt) {
+    if (prey === 'laser') { if (preyFled) preyX = x + dir * 190 + 8 * Math.sin(t * 11); else preyX += 30 * Math.sin(t * 7) * dt; }
+    else if (prey === 'butterfly') { if (preyFled) { preyX += dir * 90 * dt; preyY -= 70 * dt; if (preyY < -20) prey = null; }
+      else { preyX += 40 * Math.sin(t * 2.3) * dt; preyY = BUTTERFLY_Y + 12 * Math.sin(t * 3.1); } }
+  }
+  function step(time, dt) {
+    t = time; const now = steps[0];
+    if (!now) { cv.style.visibility = 'hidden'; away -= dt; if (away <= 0) plan(); return; }
+    cv.style.visibility = 'visible';
+    if (now.k !== 'walk') walking = approach(walking, 0, dt * 5);
+    if (now.k !== 'stretch') stretch = approach(stretch, 0, dt * 2);
+    if (now.k !== 'pounce') { leap = approach(leap, 0, dt * 4); hop = 0; tilt = 0; }
+    switch (now.k) {
+      case 'walk': if (lying > 0) lying = Math.max(0, lying - dt * 1.5); else {
+        const fast = now.speed > SPEED ? 1 : 0; running = approach(running, fast, dt * 3); walking = approach(walking, 1, dt * (4 + 6 * fast));
+        x += dir * now.speed * dt * walking; stride += dt * (7.5 + 8.5 * running) * walking; if (dir * (now.to - x) <= 0) done(); } break;
+      case 'pause': lying = approach(lying, 0, dt * 1.2); now.left -= dt; if (now.left <= 0) done(); break;
+      case 'nap': lying = approach(lying, 1, dt * .8); now.left -= dt; if (now.left <= 0) done(); break;
+      case 'stretch': lying = approach(lying, 0, dt * 1.5); now.left -= dt; stretch = Math.sin(PI * Math.min(1, Math.max(0, 1 - now.left / now.length))); if (now.left <= 0) done(); break;
+      case 'stalk': lying = approach(lying, .45, dt * 2); now.left -= dt; if (now.left <= 0) done(); break;
+      case 'pounce': if (now.p === 0) now.from = x; lying = 0; now.p = Math.min(1, now.p + dt / POUNCE);
+        x = now.from + dir * now.length * now.p; hop = now.height * Math.sin(PI * now.p); leap = Math.sin(PI * now.p); tilt = -14 * (1 - 2 * now.p) * leap;
+        if (now.p >= 1) { done(); preyFled = true; } break;
+    }
+    movePrey(dt);
+    blinkIn -= dt; if (blinkIn < -BLINK) blinkIn = R() * 3 + 2;
+    cv.style.transform = `translateX(${x - W / 2}px)`;
+    draw();
+  }
+  const rotAt = (deg, px, py) => { c.translate(px, py); c.rotate(deg * PI / 180); c.translate(-px, -py); };
+  const oval = (l, tp, r, b) => { c.beginPath(); c.ellipse((l + r) / 2, (tp + b) / 2, Math.abs(r - l) / 2, Math.abs(b - tp) / 2, 0, 0, 7); };
+  function legTo(px, py, a, l, color, width) {
+    const fx = px + l * Math.sin(a), fy = py + l * Math.cos(a);
+    c.strokeStyle = color; c.lineWidth = width; c.beginPath(); c.moveTo(px, py); c.lineTo(fx, fy); c.stroke();
+    c.fillStyle = MITT; oval(fx - 6, fy - 5, fx + 10, fy + 5); c.fill();
+  }
+  function frontLeg(px, py, phase, color, width) {
+    const amp = .42 + .25 * running;
+    let a = lerp(amp * Math.sin(phase) * walking, 1.4, lying), l = lerp(44 * (1 - .12 * Math.max(0, Math.cos(phase)) * walking), 32, lying);
+    a = lerp(a, 1.25, stretch); l = lerp(l, 44, stretch); a = lerp(a, 1.05, leap); l = lerp(l, 46, leap);
+    legTo(px, py, a, l, color, width);
+  }
+  function hindLeg(px, py, phase, color, width) {
+    const amp = .42 + .25 * running;
+    let a = amp * Math.sin(phase) * walking * (1 - lying), l = lerp(44 * (1 - .12 * Math.max(0, Math.cos(phase)) * walking), 6, lying);
+    a = lerp(a, -1, leap); l = lerp(l, 46, leap);
+    legTo(px, py, a, l, color, width);
+  }
+  function tail(now) {
+    const stalking = now?.k === 'stalk';
+    const sway = Math.sin(t * (stalking ? 10 : 2.2)) * (stalking ? 12 : 8 - 4 * running) * (1 - lying * (stalking ? 0 : 1));
+    const curl = stalking ? 0 : lying, flat = stalking ? .7 : 0;
+    c.beginPath(); c.moveTo(64, TOP + lerp(84, 116, curl));
+    c.quadraticCurveTo(lerp(26, 40, curl), TOP + lerp(82, 142, curl), lerp(34 + sway, 124, curl) - 20 * flat, TOP + lerp(32, 138, curl) + 50 * flat);
+    c.strokeStyle = NEAR; c.lineWidth = 24; c.stroke(); c.strokeStyle = POINT; c.lineWidth = 14; c.stroke();
+  }
+  function head(cx, cy, asleep, meowing) {
+    c.save(); c.translate(cx, cy);
+    c.fillStyle = POINT;
+    c.beginPath(); c.moveTo(-22, -8); c.lineTo(-14, -46); c.lineTo(4, -20); c.fill();
+    c.beginPath(); c.moveTo(0, -22); c.lineTo(18, -46); c.lineTo(25, -6); c.fill();
+    c.fillStyle = EAR; c.beginPath(); c.moveTo(8, -22); c.lineTo(17, -37); c.lineTo(20, -16); c.fill();
+    c.fillStyle = BELLY; c.beginPath(); c.arc(0, 0, 24, 0, 7); c.fill();
+    const m = c.createRadialGradient(12, 6, 0, 12, 6, 32); m.addColorStop(0, POINT); m.addColorStop(.5, 'rgba(59,41,32,.93)'); m.addColorStop(1, 'rgba(59,41,32,0)');
+    c.fillStyle = m; c.beginPath(); c.arc(0, 0, 24, 0, 7); c.fill();
+    c.fillStyle = POINT; oval(8, -1, 30, 17); c.fill();
+    c.fillStyle = NOSE; oval(26, 0, 32, 5); c.fill();
+    if (meowing) { c.fillStyle = MOUTH; oval(19, 11, 28, 19); c.fill(); }
+    const open = asleep ? 0 : blinkIn < 0 ? .15 : 1;
+    if (open < .5) { c.strokeStyle = BELLY; c.lineWidth = 2; c.beginPath(); c.ellipse(12, -5, 6, 3, 0, 10 * PI / 180, 170 * PI / 180); c.stroke(); }
+    else { c.fillStyle = EYE; oval(6.5, -8.5, 17.5, -.5); c.fill(); c.fillStyle = PUPIL; oval(10.5, -8, 13.5, -1); c.fill();
+      c.fillStyle = MITT; c.beginPath(); c.arc(14.5, -6, 1.2, 0, 7); c.fill(); }
+    c.strokeStyle = WHISKER; c.lineWidth = 1.2; c.beginPath();
+    c.moveTo(24, 9); c.lineTo(50, 4); c.moveTo(24, 11); c.lineTo(50, 12); c.moveTo(23, 13); c.lineTo(46, 19); c.stroke();
+    c.restore();
+  }
+  function drawPrey() {
+    const px = preyX - (x - W / 2);
+    if (prey === 'laser') { const y = TOP + 140;
+      c.fillStyle = LASER; c.globalAlpha = 70 / 255; c.beginPath(); c.arc(px, y, 16, 0, 7); c.fill();
+      c.globalAlpha = 1; c.beginPath(); c.arc(px, y, 7, 0, 7); c.fill(); c.fillStyle = MITT; c.beginPath(); c.arc(px, y, 2.5, 0, 7); c.fill(); }
+    else if (prey === 'butterfly') { const flap = .25 + .75 * Math.abs(Math.sin(t * 18));
+      c.fillStyle = WING; oval(px - 26 * flap, preyY - 20, px, preyY + 3); c.fill(); oval(px, preyY - 20, px + 26 * flap, preyY + 3); c.fill();
+      c.fillStyle = WING_LOW; oval(px - 18 * flap, preyY - 2, px, preyY + 16); c.fill(); oval(px, preyY - 2, px + 18 * flap, preyY + 16); c.fill();
+      c.strokeStyle = POINT; c.lineWidth = 3.5; c.beginPath(); c.moveTo(px, preyY - 13); c.lineTo(px, preyY + 13); c.stroke(); }
+  }
+  function bubble(said, cx, top) {
+    c.font = 'bold 22px -apple-system, Helvetica, sans-serif'; c.textAlign = 'center';
+    const w = Math.max(34, c.measureText(said).width + 28);
+    c.beginPath(); c.roundRect(cx - w / 2, top, w, 34, 17); c.fillStyle = MITT; c.fill(); c.strokeStyle = POINT; c.lineWidth = 2; c.stroke();
+    c.fillStyle = said === HEART ? MOUTH : POINT; c.fillText(said, cx, top + 24); c.textAlign = 'left';
+  }
+  function snore(cx, base) {
+    c.fillStyle = EYE; c.textAlign = 'center';
+    for (let i = 0; i < 3; i++) { const k = ((t / 3) + i / 3) % 1;
+      c.font = `bold ${14 + 14 * k}px -apple-system, Helvetica, sans-serif`; c.globalAlpha = Math.sin(k * PI); c.fillText('z', cx + 18 * k, base - 40 * k); }
+    c.globalAlpha = 1; c.textAlign = 'left';
+  }
+  function draw() {
+    const now = steps[0];
+    const said = now?.k === 'pause' && now.left > .3 ? now.say : null, asleep = now?.k === 'nap' && lying > .7;
+    const bob = Math.abs(Math.sin(stride)) * (1.6 + 3 * running) * walking, pivot = TOP + 96 + 26 * lying + bob;
+    const wiggle = now?.k === 'stalk' && lying > .3 ? 3 * Math.sin(t * 20) : 0;
+    c.clearRect(0, 0, W, H); c.lineCap = 'round';
+    c.save();
+    if (dir < 0) { c.translate(W / 2, 0); c.scale(-1, 1); c.translate(-W / 2, 0); }
+    c.translate(CAT_X + wiggle, -hop);
+    rotAt(stretch * 11, 82, TOP + 140); rotAt(tilt, 120, TOP + 90);
+    frontLeg(152, pivot, stride + PI, FAR, 12); hindLeg(82, pivot, stride, FAR, 12);
+    tail(now);
+    c.save(); c.translate(120, TOP + 88 + 22 * lying + bob);
+    const coat = c.createLinearGradient(0, -30, 0, 30); coat.addColorStop(0, BACK); coat.addColorStop(1, BELLY);
+    c.fillStyle = coat; oval(-58 - 4 * lying - 6 * leap, -28 + 4 * lying, 58 + 4 * lying + 6 * leap, 28); c.fill(); c.restore();
+    hindLeg(82, pivot, stride + PI, NEAR, 13);
+    c.fillStyle = BACK; c.globalAlpha = 150 / 255; oval(66, pivot - 22, 102, pivot + 16 - 10 * lying); c.fill(); c.globalAlpha = 1;
+    frontLeg(152, pivot, stride, NEAR, 13);
+    c.fillStyle = BIB; oval(138, TOP + 60 + 26 * lying + bob, 178, TOP + 112 + 18 * lying + bob); c.fill();
+    head(186 + 4 * lying, TOP + 58 + 38 * lying + bob * .6, asleep, said != null);
+    c.restore();
+    drawPrey();
+    const hx = dir > 0 ? CAT_X + 200 : W - (CAT_X + 200);
+    if (said != null) bubble(said, hx, TOP + 2 - hop);
+    if (asleep) snore(hx, TOP + 40);
+  }
+  return { step, summon: kind => plan(kind) };
+})();
+addEventListener('keydown', e => {
+  if (menu.classList.contains('open')) return;
+  if (e.key === 'n' || e.key === 'N') Neva.summon();
+  if ('1234'.includes(e.key) && e.key.length === 1) Neva.summon(+e.key - 1);
+});
+
+/* ---------- the frame clock ---------- */
+document.fonts.ready.then(() => {
+  drawParchment(); showHouse();
+  document.querySelectorAll('.room').forEach(r => r.redraw());
+  let last = performance.now(), minute = -1;
+  const frame = ts => {
+    const dt = Math.min(.1, (ts - last) / 1000), t = ts / 1000, now = new Date(); last = ts;
+    if (now.getMinutes() !== minute) {
+      minute = now.getMinutes();
+      document.getElementById('time').textContent = hm(now);
+      document.getElementById('words').textContent = inWords(now.getHours(), now.getMinutes());
+      document.getElementById('digits').textContent = hm(now);
+      document.getElementById('date').textContent = longDate(now);
+      showHero(now);
+    }
+    drawTurner(t, now); drawMap(dt); Neva.step(t, dt);
+    requestAnimationFrame(frame);
+  };
+  focus(document.getElementById('resume'));
+  requestAnimationFrame(frame);
+});
+</script>
+</body>
+</html>
