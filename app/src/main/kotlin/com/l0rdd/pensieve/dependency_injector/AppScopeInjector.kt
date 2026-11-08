@@ -15,6 +15,7 @@ import com.l0rdd.pensieve.data.repositories.apps.PackageManagerAppRepository
 import com.l0rdd.pensieve.data.repositories.apps.PreferencesShelfRepository
 import com.l0rdd.pensieve.data.repositories.house.HubHouseRepository
 import com.l0rdd.pensieve.data.repositories.look.PreferencesLookRepository
+import com.l0rdd.pensieve.data.repositories.projector.HubProjectorRepository
 import com.l0rdd.pensieve.data.repositories.resume.FeedResumeRepository
 import com.l0rdd.pensieve.data.repositories.resume.HttpArtworkRepository
 import com.l0rdd.pensieve.data.repositories.scenes.JmgoSceneRepository
@@ -26,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 
 private const val STORE = "com.android.vending"
 private const val SCREEN = "screen"
+private const val PROJECTOR = "projector"
 
 /** The action that opens the quick panel (see the manifest). */
 const val QUICK_PANEL = "com.l0rdd.pensieve.QUICK_PANEL"
@@ -54,5 +56,6 @@ fun injectAppScope(context: Context, scope: CoroutineScope = CoroutineScope(Supe
         clock = SystemClockRepository(),
         system = AndroidSystemRepository(packages, QUICK_PANEL, app.packageName),
         scenes = JmgoSceneRepository(AndroidSystemSettingsDataSource(app), BinderJmgoMiddlewareDataSource(app)),
+        projector = HubProjectorRepository(http, BuildConfig.HUB_URL, PROJECTOR),
     )
 }

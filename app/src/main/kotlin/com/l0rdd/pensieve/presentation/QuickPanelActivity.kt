@@ -61,6 +61,7 @@ class QuickPanelActivity : ComponentActivity() {
             PanelEntry(getString(R.string.panel_picture), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.PICTURE)) },
             PanelEntry(getString(R.string.panel_keystone), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.KEYSTONE)) },
             PanelEntry(getString(R.string.panel_network), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.NETWORK)) },
+            PanelEntry(getString(R.string.panel_close_apps), "✕") { viewModel.dispatch(QuickPanelEvent.CloseAppsPicked) },
             PanelEntry(getString(R.string.cinema), if (!house.reachable) off else if (house.isCinema) "ON" else "OFF") { viewModel.dispatch(QuickPanelEvent.CinemaPicked) },
             PanelEntry(getString(R.string.screen), screenState(house)?.let { getString(it) }.orEmpty()) { viewModel.dispatch(QuickPanelEvent.ProjectionScreenPicked) },
             PanelEntry(getString(R.string.panel_look), getString(when (look) {

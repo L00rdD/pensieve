@@ -21,4 +21,6 @@ class PackageManagerAppRepository(
         source.changes().map { source.query().map(mapper::toApp) }.flowOn(Dispatchers.IO)
 
     override suspend fun launch(id: AppId) = withContext(Dispatchers.Main) { source.launch(id.value) }
+
+    override suspend fun installed(): List<AppId> = withContext(Dispatchers.IO) { source.packages().map(::AppId) }
 }

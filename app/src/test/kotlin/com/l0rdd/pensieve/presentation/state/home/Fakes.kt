@@ -27,6 +27,7 @@ class FakeApps(private val apps: List<App>) : AppRepository {
     val launched = mutableListOf<AppId>()
     override fun observeApps(): Flow<List<App>> = flowOf(apps)
     override suspend fun launch(id: AppId) { launched += id }
+    override suspend fun installed(): List<AppId> = apps.map { it.id }
 }
 
 class FakeShelf(initial: Shelf) : ShelfRepository {

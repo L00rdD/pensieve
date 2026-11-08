@@ -10,4 +10,5 @@ sealed interface QuickPanelEvent {
     data object ProjectionScreenPicked : QuickPanelEvent
     data object LookCycled : QuickPanelEvent
     data class ScenePicked(val scene: Scene) : QuickPanelEvent
+    data object CloseAppsPicked : QuickPanelEvent
 }

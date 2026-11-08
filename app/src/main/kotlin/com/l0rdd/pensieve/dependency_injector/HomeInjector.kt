@@ -73,6 +73,7 @@ fun injectQuickPanel(scope: AppScope): ViewModelProvider.Factory = object : View
         ObserveLook(scope.look), ChangeLook(scope.look), ObserveHouse(scope.house),
         ToggleCinemaMode(scope.house), ToggleScreen(scope.house), OpenSystemScreen(scope.system),
         com.l0rdd.pensieve.domain.usecases.scenes.ObserveScenes(scope.scenes), com.l0rdd.pensieve.domain.usecases.scenes.ApplyScene(scope.scenes),
+        com.l0rdd.pensieve.domain.usecases.apps.CloseApps(scope.apps, scope.projector),
     ) as T
 }
 

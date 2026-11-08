@@ -10,4 +10,7 @@ interface AppRepository {
     fun observeApps(): Flow<List<App>>
 
     suspend fun launch(id: AppId)
+
+    /** Every app that can be opened from the home screen, by its id only. */
+    suspend fun installed(): List<AppId>
 }

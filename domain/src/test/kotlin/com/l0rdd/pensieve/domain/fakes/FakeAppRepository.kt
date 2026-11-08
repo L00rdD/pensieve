@@ -12,4 +12,5 @@ class FakeAppRepository(initial: List<App> = emptyList()) : AppRepository {
     val launched = mutableListOf<AppId>()
     override fun observeApps(): Flow<List<App>> = state
     override suspend fun launch(id: AppId) { launched += id }
+    override suspend fun installed(): List<AppId> = state.value.map { it.id }
 }

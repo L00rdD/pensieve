@@ -56,6 +56,7 @@
     <string name="panel_picture">Image</string>
     <string name="panel_keystone">Correction trapèze</string>
     <string name="panel_network">Réseau et Wi-Fi</string>
+    <string name="panel_close_apps">Fermer toutes les apps</string>
     <string name="panel_look">Look de l\'accueil</string>
 
     <!-- arranging an app (OK held) -->
