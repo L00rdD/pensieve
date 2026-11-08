@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -61,6 +62,8 @@ class HomeActivity : ComponentActivity() {
         layer = FrameLayout(this)
         stage = Stage(this).apply { addView(layer) }
         setContentView(stage)
+        // the home screen is home: BACK closes a menu, and otherwise does nothing (on Android 16 too, where it skips the views)
+        onBackPressedDispatcher.addCallback(this) { if (shownMenu != null) viewModel.dispatch(HomeEvent.MenuClosed) }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.state.collect(::show) }
         }
@@ -75,12 +78,6 @@ class HomeActivity : ComponentActivity() {
         clock.start()
         stage.removeCallbacks(rest)
         stage.postDelayed(rest, REST_MS)
-    }
-
-    /** The home screen is home: BACK closes a menu, and otherwise does nothing. */
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (shownMenu != null) viewModel.dispatch(HomeEvent.MenuClosed)
     }
 
     /**
