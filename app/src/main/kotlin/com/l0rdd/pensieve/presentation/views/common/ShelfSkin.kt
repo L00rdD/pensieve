@@ -41,10 +41,33 @@ interface ShelfSkin {
 
     fun action(): ActionTile
 
+    /**
+     * The look's own house column, in place of [clock], the house's label and the [action] tiles
+     * (the Marauder's Weasley clock); null for those.
+     */
+    fun house(): HouseColumn? = null
+
+    /** The look's own screen panel, laid in the house column ([ScreenControl]); null to unfold [ScreenPanel] over the page. */
+    fun screenControl(onCommand: (com.l0rdd.pensieve.domain.entities.house.ScreenCommand) -> Unit, onClose: () -> Unit, saying: Saying): ScreenControl? = null
+
     fun hint(): TextView
 
     /** The focus went from [from] to [to], both given in the layout's coordinates. */
     fun onFocusMove(from: android.graphics.Rect?, to: android.graphics.Rect) {}
+}
+
+/**
+ * A look's whole house column: the time and the house, each thing of it a focusable row whose
+ * OK the layout wires ([rows], in [House] order: the cinema mode, each outlet, the screen, each
+ * presence). [cover] lays a screen panel in place of what is under the clock, [uncover] takes it away.
+ */
+interface HouseColumn {
+    val view: View
+    fun showTime(now: LocalDateTime)
+    fun show(house: com.l0rdd.pensieve.domain.entities.house.House)
+    val rows: List<View>
+    fun cover(panel: View)
+    fun uncover(panel: View)
 }
 
 /** The clock at the top of the house column. */

@@ -14,6 +14,23 @@ class ModelsTest {
     }
 
     @Test
+    fun `an outlet's next switch, and the desk's presence`() {
+        val m = HubStatusModel.parse("""{"outlets":[{"id":"torii","name":"Torii","on":true,"next":{"at":"2026-11-08T23:00+01:00","on":false}},
+            {"id":"terrarium","name":"Terrarium","on":false,"next":null}],
+            "presences":[{"id":"desk","name":"Bureau","outlet":"basketball-neon","present":false,"idle":2172.4},
+            {"id":"sofa","name":"Canapé","outlet":null,"present":true,"idle":null}]}""")
+        assertEquals(HubStatusModel.Next("2026-11-08T23:00+01:00", false), m.outlets[0].next)
+        assertNull(m.outlets[1].next)
+        assertEquals(HubStatusModel.Presence("desk", "Bureau", "basketball-neon", false, 2172), m.presences[0])
+        assertEquals(HubStatusModel.Presence("sofa", "Canapé", null, true, null), m.presences[1])
+    }
+
+    @Test
+    fun `a hub without presences has none`() {
+        assertEquals(emptyList<HubStatusModel.Presence>(), HubStatusModel.parse("""{"outlets":[]}""").presences)
+    }
+
+    @Test
     fun `a moving screen's way and target`() {
         val m = HubStatusModel.parse("""{"covers":[{"id":"screen","name":"Écran","position":40,"moving":"down","target":100}]}""")
         assertEquals(HubStatusModel.Cover("screen", "Écran", 40, "down", 100), m.covers.single())
