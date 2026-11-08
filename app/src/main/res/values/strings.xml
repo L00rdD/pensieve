@@ -21,6 +21,12 @@
     <string name="screen_down">▼ BAS</string>
     <string name="screen_up">▲ HAUT</string>
     <string name="screen_moving">EN ROUTE</string>
+    <string name="screen_title">Écran de projection</string>
+    <string name="screen_raise">▲ Remonter</string>
+    <string name="screen_stop">■ Arrêter</string>
+    <string name="screen_lower">▼ Baisser</string>
+    <string name="screen_rolled_up">= Il est remonté</string>
+    <string name="screen_open">= Il est ouvert</string>
     <string name="unreachable">HORS LIGNE</string>
     <string name="badge_new">NOUVEAU</string>
     <string name="store">Play Store</string>
@@ -58,7 +64,7 @@
     <string name="hint_store"><b>OK</b> ouvrir le Play Store pour ajouter une appli</string>
     <string name="hint_cinema"><b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer</string>
     <string name="hint_outlet"><b>OK</b> allumer ou éteindre</string>
-    <string name="hint_screen"><b>OK</b> monter ou descendre l\'écran</string>
+    <string name="hint_screen"><b>OK</b> monter ou descendre l\'écran · <b>OK long</b> arrêter, ou dire où il est</string>
 
     <!-- J.A.R.V.I.S. -->
     <string name="jv_company">STARK INDUSTRIES // HOME</string>
@@ -73,7 +79,7 @@
     <string name="jv_say_new">%1$s vient d\'être installée. Appui long pour la ranger.</string>
     <string name="jv_say_cinema">Mode cinéma : j\'éteins le néon et je descends l\'écran.</string>
     <string name="jv_say_outlet">%1$s est %2$s. OK pour basculer.</string>
-    <string name="jv_say_screen">L\'écran est %1$s. OK pour le déplacer.</string>
+    <string name="jv_say_screen">L\'écran est %1$s. OK pour le déplacer, appui long pour le régler.</string>
     <string name="jv_say_settings">Les paramètres du projecteur, monsieur. Réglages JMGO compris.</string>
     <string name="jv_say_store">Le Play Store, pour ajouter une application.</string>
     <string name="on">allumé</string>

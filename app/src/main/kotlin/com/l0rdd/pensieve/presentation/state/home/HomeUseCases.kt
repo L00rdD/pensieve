@@ -6,6 +6,7 @@ import com.l0rdd.pensieve.domain.usecases.apps.MarkAppSeen
 import com.l0rdd.pensieve.domain.usecases.apps.MoveFavorite
 import com.l0rdd.pensieve.domain.usecases.apps.ObserveHomeApps
 import com.l0rdd.pensieve.domain.usecases.apps.PinFavorite
+import com.l0rdd.pensieve.domain.usecases.house.CommandScreen
 import com.l0rdd.pensieve.domain.usecases.house.ObserveHouse
 import com.l0rdd.pensieve.domain.usecases.house.ToggleCinemaMode
 import com.l0rdd.pensieve.domain.usecases.house.ToggleOutlet
@@ -36,6 +37,7 @@ class HomeUseCases(
     val observeHouse: ObserveHouse,
     val toggleOutlet: ToggleOutlet,
     val toggleScreen: ToggleScreen,
+    val commandScreen: CommandScreen,
     val toggleCinemaMode: ToggleCinemaMode,
     val observeTime: ObserveTime,
     val openSystemScreen: OpenSystemScreen,

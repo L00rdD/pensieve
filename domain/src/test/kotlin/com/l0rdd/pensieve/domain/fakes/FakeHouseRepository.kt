@@ -10,7 +10,11 @@ import kotlinx.coroutines.flow.flowOf
 class FakeHouseRepository(private val house: House = House.UNKNOWN) : HouseRepository {
     val switched = mutableListOf<Pair<OutletId, Boolean>>()
     val moved = mutableListOf<Int>()
+    val declared = mutableListOf<Int>()
+    var stopped = 0
     override fun observeHouse(): Flow<House> = flowOf(house)
     override suspend fun switchOutlet(id: OutletId, on: Boolean) { switched += id to on }
     override suspend fun moveScreen(position: Int) { moved += position }
+    override suspend fun stopScreen() { stopped++ }
+    override suspend fun declareScreen(position: Int) { declared += position }
 }

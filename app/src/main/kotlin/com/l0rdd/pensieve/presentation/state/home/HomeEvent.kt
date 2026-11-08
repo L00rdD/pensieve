@@ -2,6 +2,7 @@ package com.l0rdd.pensieve.presentation.state.home
 
 import com.l0rdd.pensieve.domain.entities.apps.AppId
 import com.l0rdd.pensieve.domain.entities.house.Outlet
+import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.domain.entities.look.Look
 
 /** What the user does on the home screen. */
@@ -15,6 +16,8 @@ sealed interface HomeEvent {
     data object CinemaPicked : HomeEvent
     data class OutletPicked(val outlet: Outlet) : HomeEvent
     data object ScreenPicked : HomeEvent
+    data object ScreenHeld : HomeEvent
+    data class ScreenCommanded(val command: ScreenCommand) : HomeEvent
     data object SettingsPicked : HomeEvent
     data object SettingsHeld : HomeEvent
     data class LookPicked(val look: Look) : HomeEvent

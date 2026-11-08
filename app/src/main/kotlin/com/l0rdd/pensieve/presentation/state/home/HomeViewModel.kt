@@ -55,6 +55,11 @@ class HomeViewModel(private val useCases: HomeUseCases) : ViewModel() {
             HomeEvent.CinemaPicked -> useCases.toggleCinemaMode(state.house)
             is HomeEvent.OutletPicked -> useCases.toggleOutlet(event.outlet)
             HomeEvent.ScreenPicked -> state.house.screen?.let { useCases.toggleScreen(it) }
+            HomeEvent.ScreenHeld -> _state.update { it.copy(menu = HomeMenu.CommandScreen) }
+            is HomeEvent.ScreenCommanded -> {
+                _state.update { it.copy(menu = null) }
+                useCases.commandScreen(event.command)
+            }
             HomeEvent.SettingsPicked -> useCases.openSystemScreen(SystemScreen.SETTINGS)
             HomeEvent.SettingsHeld -> _state.update { it.copy(menu = HomeMenu.PickLook) }
             is HomeEvent.LookPicked -> {

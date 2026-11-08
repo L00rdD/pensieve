@@ -7,6 +7,7 @@ import com.l0rdd.pensieve.domain.entities.house.House
 import com.l0rdd.pensieve.domain.entities.house.Outlet
 import com.l0rdd.pensieve.domain.entities.house.OutletId
 import com.l0rdd.pensieve.domain.entities.house.Screen
+import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.domain.entities.resume.Resume
 import com.l0rdd.pensieve.domain.usecases.apps.HideApp
@@ -15,6 +16,7 @@ import com.l0rdd.pensieve.domain.usecases.apps.MarkAppSeen
 import com.l0rdd.pensieve.domain.usecases.apps.MoveFavorite
 import com.l0rdd.pensieve.domain.usecases.apps.ObserveHomeApps
 import com.l0rdd.pensieve.domain.usecases.apps.PinFavorite
+import com.l0rdd.pensieve.domain.usecases.house.CommandScreen
 import com.l0rdd.pensieve.domain.usecases.house.ObserveHouse
 import com.l0rdd.pensieve.domain.usecases.house.ToggleCinemaMode
 import com.l0rdd.pensieve.domain.usecases.house.ToggleOutlet
@@ -62,7 +64,7 @@ class HomeViewModelTest {
     private fun viewModel() = HomeViewModel(HomeUseCases(
         ObserveLook(look), ChangeLook(look), ObserveHomeApps(apps, shelf), LaunchApp(apps, shelf), PinFavorite(shelf), MoveFavorite(shelf),
         HideApp(shelf), MarkAppSeen(shelf), ObserveResume(resume), ResumePlayback(resume), RestartPlayback(resume), LoadArtwork(FakeArtwork()),
-        ObserveHouse(hub), ToggleOutlet(hub), ToggleScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSystemScreen(system),
+        ObserveHouse(hub), ToggleOutlet(hub), ToggleScreen(hub), CommandScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSystemScreen(system),
     ))
 
     @Test
@@ -136,6 +138,18 @@ class HomeViewModelTest {
         vm.dispatch(HomeEvent.ScreenPicked)
         assertEquals(listOf(neon.id to false), hub.switched)
         assertEquals(listOf(Screen.DOWN, Screen.DOWN), hub.moved)
+    }
+
+    @Test
+    fun `the screen's menu opens on OK held, and a command sent closes it`() {
+        val vm = viewModel()
+        vm.dispatch(HomeEvent.ScreenHeld)
+        assertEquals(HomeMenu.CommandScreen, vm.state.value.menu)
+        vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP))
+        vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.STOP))
+        assertEquals(null, vm.state.value.menu)
+        assertEquals(listOf(Screen.UP), hub.declared)
+        assertEquals(1, hub.stopped)
     }
 
     @Test

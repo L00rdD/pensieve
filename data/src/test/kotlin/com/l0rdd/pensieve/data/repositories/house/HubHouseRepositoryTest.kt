@@ -32,6 +32,13 @@ class HubHouseRepositoryTest {
         val repo = repository(http)
         repo.switchOutlet(OutletId("basketball-neon"), false)
         repo.moveScreen(100)
-        assertEquals(listOf("$hub/api/outlets/basketball-neon" to """{"on": false}""", "$hub/api/covers/screen" to """{"position": 100}"""), http.posted)
+        repo.stopScreen()
+        repo.declareScreen(0)
+        assertEquals(listOf(
+            "$hub/api/outlets/basketball-neon" to """{"on": false}""",
+            "$hub/api/covers/screen" to """{"position": 100}""",
+            "$hub/api/covers/screen" to """{"stop": true}""",
+            "$hub/api/covers/screen" to """{"declare": 0}""",
+        ), http.posted)
     }
 }

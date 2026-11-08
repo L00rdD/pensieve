@@ -40,7 +40,19 @@ class HubHouseRepository(
     }
 
     override suspend fun moveScreen(position: Int) {
-        http.postJson("$hubUrl/api/covers/$screenId", """{"position": $position}""")
+        command("""{"position": $position}""")
+    }
+
+    override suspend fun stopScreen() {
+        command("""{"stop": true}""")
+    }
+
+    override suspend fun declareScreen(position: Int) {
+        command("""{"declare": $position}""")
+    }
+
+    private suspend fun command(json: String) {
+        http.postJson("$hubUrl/api/covers/$screenId", json)
         refresh.tryEmit(Unit)
     }
 

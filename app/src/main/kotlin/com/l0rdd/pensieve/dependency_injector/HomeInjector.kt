@@ -13,6 +13,7 @@ import com.l0rdd.pensieve.domain.usecases.house.ObserveHouse
 import com.l0rdd.pensieve.domain.usecases.house.ToggleCinemaMode
 import com.l0rdd.pensieve.domain.usecases.house.ToggleOutlet
 import com.l0rdd.pensieve.domain.usecases.house.ToggleScreen
+import com.l0rdd.pensieve.domain.usecases.house.CommandScreen
 import com.l0rdd.pensieve.domain.usecases.look.ChangeLook
 import com.l0rdd.pensieve.domain.usecases.look.ObserveLook
 import com.l0rdd.pensieve.domain.usecases.resume.LoadArtwork
@@ -51,6 +52,7 @@ fun injectHome(scope: AppScope): ViewModelProvider.Factory = object : ViewModelP
             observeHouse = ObserveHouse(scope.house),
             toggleOutlet = ToggleOutlet(scope.house),
             toggleScreen = ToggleScreen(scope.house),
+            commandScreen = CommandScreen(scope.house),
             toggleCinemaMode = ToggleCinemaMode(scope.house),
             observeTime = ObserveTime(scope.clock),
             openSystemScreen = OpenSystemScreen(scope.system),

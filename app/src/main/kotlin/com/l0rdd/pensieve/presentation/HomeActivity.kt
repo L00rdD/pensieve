@@ -13,6 +13,7 @@ import com.l0rdd.pensieve.PensieveApplication
 import com.l0rdd.pensieve.R
 import com.l0rdd.pensieve.dependency_injector.injectHome
 import com.l0rdd.pensieve.dependency_injector.injectHomeViews
+import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.presentation.state.home.Arrange
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
@@ -132,9 +133,15 @@ class HomeActivity : ComponentActivity() {
         val overlay = MenuOverlay(this, style ?: return, onClose = { viewModel.dispatch(HomeEvent.MenuClosed) })
         layer.addView(overlay, FrameLayout.LayoutParams(Stage.WIDTH, Stage.HEIGHT))
         menu = overlay
-        val title = (wanted as? HomeMenu.ArrangeApp)?.label ?: getString(R.string.look_title)
+        val title = menuTitle(wanted)
         overlay.show(title, menuEntries(wanted).map { (text, event) -> getString(text) to { viewModel.dispatch(event) } })
         overlay.tag = focused
+    }
+
+    private fun menuTitle(menu: HomeMenu): String = when (menu) {
+        is HomeMenu.ArrangeApp -> menu.label
+        HomeMenu.PickLook -> getString(R.string.look_title)
+        HomeMenu.CommandScreen -> getString(R.string.screen_title)
     }
 }
 
@@ -179,6 +186,13 @@ internal fun menuEntries(menu: HomeMenu): List<Pair<Int, HomeEvent>> = when (men
         R.string.look_jarvis to HomeEvent.LookPicked(Look.JARVIS),
         R.string.look_cyberpunk to HomeEvent.LookPicked(Look.CYBERPUNK),
         R.string.look_marauder to HomeEvent.LookPicked(Look.MARAUDER),
+    )
+    HomeMenu.CommandScreen -> listOf(
+        R.string.screen_raise to HomeEvent.ScreenCommanded(ScreenCommand.RAISE),
+        R.string.screen_stop to HomeEvent.ScreenCommanded(ScreenCommand.STOP),
+        R.string.screen_lower to HomeEvent.ScreenCommanded(ScreenCommand.LOWER),
+        R.string.screen_rolled_up to HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP),
+        R.string.screen_open to HomeEvent.ScreenCommanded(ScreenCommand.OPEN),
     )
 }
 

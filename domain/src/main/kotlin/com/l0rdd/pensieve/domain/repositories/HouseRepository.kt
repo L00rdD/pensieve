@@ -12,4 +12,10 @@ interface HouseRepository {
 
     /** Sends the screen to [position], 0 up to 100 down. */
     suspend fun moveScreen(position: Int)
+
+    /** Stops the screen where it is. */
+    suspend fun stopScreen()
+
+    /** Tells the hub the screen really is at [position]: nothing moves. */
+    suspend fun declareScreen(position: Int)
 }
