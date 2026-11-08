@@ -166,10 +166,9 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
             tile.view.pressable({ dispatch(HomeEvent.OutletPicked(outlet)) })
             hints[tile.view] = { html(context.getString(R.string.hint_outlet)) }
         }
-        house.screen?.let { screen ->
+        screenState(house)?.let { state ->
             val tile = houseTiles.last()
-            tile.show(context.getString(R.string.screen), context.getString(R.string.screen_sub),
-                if (!house.reachable) off else if (screen.moving != null) context.getString(R.string.screen_moving) else context.getString(if (screen.isDown) R.string.screen_down else R.string.screen_up), "▤")
+            tile.show(context.getString(R.string.screen), context.getString(R.string.screen_sub), context.getString(state), "▤")
             tile.view.pressable({ dispatch(HomeEvent.ScreenPicked) }, { dispatch(HomeEvent.ScreenHeld) })
             hints[tile.view] = { html(context.getString(R.string.hint_screen)) }
         }

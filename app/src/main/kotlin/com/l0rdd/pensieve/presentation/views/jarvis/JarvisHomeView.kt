@@ -32,6 +32,7 @@ import com.l0rdd.pensieve.presentation.views.common.HomeView
 import com.l0rdd.pensieve.presentation.views.common.MenuStyle
 import com.l0rdd.pensieve.presentation.views.common.place
 import com.l0rdd.pensieve.presentation.views.common.pressable
+import com.l0rdd.pensieve.presentation.views.common.screenState
 
 /**
  * J.A.R.V.I.S.'s home screen, inside the helmet: the arc reactor resumes what was left on
@@ -213,7 +214,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         val views = (0 until homeRow.childCount).map { homeRow.getChildAt(it) as JarvisSystemView }
         showCinema(views[0], house)
         house.outlets.forEachIndexed { i, outlet -> showOutlet(views[1 + i], outlet, house.reachable) }
-        house.screen?.let { showScreen(views.last(), it, house.reachable) }
+        house.screen?.let { showScreen(views.last(), it, house) }
     }
 
     /** One system per thing the house has: the cinema scene, each outlet, the screen. */
@@ -232,11 +233,9 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         says[view] = { html(context.getString(R.string.jv_say_cinema)) }
     }
 
-    private fun showScreen(view: JarvisSystemView, screen: Screen, reachable: Boolean) {
+    private fun showScreen(view: JarvisSystemView, screen: Screen, house: House) {
         val where = context.getString(if (screen.isDown) R.string.down else R.string.up)
-        val state = if (!reachable) context.getString(R.string.unreachable)
-            else if (screen.moving != null) context.getString(R.string.screen_moving)
-            else context.getString(if (screen.isDown) R.string.screen_down else R.string.screen_up)
+        val state = context.getString(screenState(house) ?: return)
         view.show("ÉCRAN", context.getString(R.string.screen_sub), "position ${screen.position} % · $where", state, "▤", screen.position / 100f)
         view.pressable({ dispatch(HomeEvent.ScreenPicked) }, { dispatch(HomeEvent.ScreenHeld) })
         says[view] = { html(context.getString(R.string.jv_say_screen, "<b>$where</b>")) }

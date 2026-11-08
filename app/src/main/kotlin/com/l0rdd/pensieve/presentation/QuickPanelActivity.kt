@@ -17,6 +17,7 @@ import com.l0rdd.pensieve.presentation.state.panel.QuickPanelEvent
 import com.l0rdd.pensieve.presentation.state.panel.QuickPanelState
 import com.l0rdd.pensieve.presentation.state.panel.QuickPanelViewModel
 import com.l0rdd.pensieve.presentation.views.common.Stage
+import com.l0rdd.pensieve.presentation.views.common.screenState
 import com.l0rdd.pensieve.presentation.views.panel.PanelEntry
 import com.l0rdd.pensieve.presentation.views.panel.QuickPanelView
 import kotlinx.coroutines.launch
@@ -61,13 +62,7 @@ class QuickPanelActivity : ComponentActivity() {
             PanelEntry(getString(R.string.panel_keystone), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.KEYSTONE)) },
             PanelEntry(getString(R.string.panel_network), "›") { viewModel.dispatch(QuickPanelEvent.ScreenPicked(SystemScreen.NETWORK)) },
             PanelEntry(getString(R.string.cinema), if (!house.reachable) off else if (house.isCinema) "ON" else "OFF") { viewModel.dispatch(QuickPanelEvent.CinemaPicked) },
-            PanelEntry(getString(R.string.screen), when {
-                !house.reachable -> off
-                house.screen == null -> ""
-                house.screen!!.moving != null -> getString(R.string.screen_moving)
-                house.screen!!.isDown -> getString(R.string.screen_down)
-                else -> getString(R.string.screen_up)
-            }) { viewModel.dispatch(QuickPanelEvent.ProjectionScreenPicked) },
+            PanelEntry(getString(R.string.screen), screenState(house)?.let { getString(it) }.orEmpty()) { viewModel.dispatch(QuickPanelEvent.ProjectionScreenPicked) },
             PanelEntry(getString(R.string.panel_look), getString(when (look) {
                 Look.JARVIS -> R.string.look_jarvis
                 Look.CYBERPUNK -> R.string.look_cyberpunk
