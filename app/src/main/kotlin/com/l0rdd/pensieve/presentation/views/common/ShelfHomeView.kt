@@ -10,6 +10,8 @@ import com.l0rdd.pensieve.R
 import com.l0rdd.pensieve.domain.entities.apps.AppKind
 import com.l0rdd.pensieve.domain.entities.apps.ShelvedApp
 import com.l0rdd.pensieve.domain.entities.house.House
+import com.l0rdd.pensieve.domain.entities.house.OutletId
+import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.presentation.MenuStyled
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
 import com.l0rdd.pensieve.presentation.state.home.HomeState
@@ -17,10 +19,12 @@ import com.l0rdd.pensieve.presentation.strategies.HomeViewTools
 
 /**
  * The shelf layout, dressed by a look's [skin]: the header with the settings always at hand,
- * the house on the left under the clock, and on the right, scrolling, what to resume, the
- * favourites (5 a row) and every other app (6 a row). The bottom line says what OK does.
+ * the house on the left under the clock (or the look's own [HouseColumn]), and on the right,
+ * scrolling, what to resume, the favourites (5 a row) and every other app (6 a row). The bottom
+ * line says what OK does, or what a look's panel says ([Quill]). A look's own screen panel is
+ * laid in its house column ([ScreenHost]).
  */
-class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSkin) : HomeView, MenuStyled {
+class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSkin) : HomeView, MenuStyled, ScreenHost {
     private val context = tools.context
     private val dispatch = tools.dispatch
     override val root = FrameLayout(context)
@@ -29,13 +33,17 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
     private val line = skin.line()
     private val time = skin.time()
     private val gear = skin.gear()
-    private val clock = skin.clock()
+    private val column = skin.house()
+    private val clock = if (column == null) skin.clock() else null
     private val hero = skin.hero()
     private val house = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     private val favorites = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     private val others = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     private val hint = skin.hint()
     private val hints = HashMap<View, () -> CharSequence>()
+    private val quill = Quill(hint, skin.menuStyle.accent) { focusedHint() ?: "" }
+    private var wiredRows = emptyList<View>()
+    private var screen: ScreenControl? = null
     private var appsKey: List<Any>? = null
     private var houseKey: List<Any>? = null
     private var houseTiles = emptyList<ActionTile>()
@@ -52,13 +60,7 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
             addView(gear)
         }
         root.place(header, 60, 18, 1800, 64)
-        val rail = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(clock.view, LinearLayout.LayoutParams(-1, clock.height))
-            addView(skin.label(context.getString(R.string.house), null), LinearLayout.LayoutParams(-1, -2).apply { topMargin = 10; bottomMargin = 14 })
-            addView(house)
-        }
-        root.place(rail, 60, 108, 410, 900)
+        placeRail()
         val page = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(22, 24, 60, 90)
@@ -84,7 +86,7 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
         var last: Rect? = null
         root.viewTreeObserver.addOnGlobalFocusChangeListener { _, focused ->
             focused ?: return@addOnGlobalFocusChangeListener
-            hint.text = hints[focused]?.invoke() ?: ""
+            showHint(hints[focused]?.invoke() ?: "")
             // a menu open over the page holds the focus outside it: no footsteps then
             if (!focused.isDescendantOf(root)) { last = null; return@addOnGlobalFocusChangeListener }
             val rect = Rect().also { focused.getDrawingRect(it); root.offsetDescendantRectToMyCoords(focused, it) }
@@ -93,20 +95,89 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
         }
     }
 
+    /** The look's house column at the top left, or the clock, the house's label and its tiles under it. */
+    private fun placeRail() {
+        column?.let { root.place(it.view, 60, 90, 410, 918); return }
+        val clock = clock ?: return
+        val rail = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(clock.view, LinearLayout.LayoutParams(-1, clock.height))
+            addView(skin.label(context.getString(R.string.house), null), LinearLayout.LayoutParams(-1, -2).apply { topMargin = 10; bottomMargin = 14 })
+            addView(house)
+        }
+        root.place(rail, 60, 108, 410, 900)
+    }
+
     override fun focusDefault() {
         (if (state.resume != null) hero.resume else favorites.getFocusables(View.FOCUS_FORWARD).firstOrNull() ?: gear).requestFocus()
     }
 
     override fun render(state: HomeState) {
         this.state = state
-        state.now?.let { clock.show(it); time.text = FrenchTime.hm(it) }
+        state.now?.let(::showTime)
         hero.show(state.resume, tools.bitmaps.of(state.poster), state.now)
         hero.restart.visibility = if (state.resume == null) View.GONE else View.VISIBLE
         hero.resume.visibility = hero.restart.visibility
         showApps(state)
-        showHouse(state.house)
-        root.findFocus()?.let { f -> hints[f]?.let { hint.text = it() } }
+        if (column != null) showColumn(column, state.house) else showHouse(state.house)
+        focusedHint()?.let(::showHint)
     }
+
+    private fun showTime(now: java.time.LocalDateTime) {
+        clock?.show(now)
+        column?.showTime(now)
+        time.text = FrenchTime.hm(now)
+    }
+
+    /** What OK does on what has the focus, if it says. */
+    private fun focusedHint(): CharSequence? = root.findFocus()?.let { hints[it] }?.invoke()
+
+    /** Writes [text] on the hint line, unless the quill is writing there. */
+    private fun showHint(text: CharSequence) {
+        if (!quill.writing) hint.text = text
+    }
+
+    /** The look's house column, its rows wired again when they were made again. */
+    private fun showColumn(column: HouseColumn, house: House) {
+        column.show(house)
+        if (column.rows == wiredRows) return
+        wiredRows.forEach { hints.remove(it) }
+        wiredRows = column.rows
+        val things = houseThings(house)
+        column.rows.forEachIndexed { i, row -> wire(row, things[i], i) }
+    }
+
+    /** OK on the [index]th row does what its [thing] does (a presence's does nothing); its hint is read when it has the focus. */
+    private fun wire(row: View, thing: HouseThing, index: Int) {
+        when (thing) {
+            HouseThing.Cinema -> row.pressable({ dispatch(HomeEvent.CinemaPicked) })
+            is HouseThing.Plug -> thing.outlet.id.let { id -> row.pressable({ outlet(id)?.let { dispatch(HomeEvent.OutletPicked(it)) } }) }
+            is HouseThing.Projection -> row.pressable({ dispatch(HomeEvent.ScreenPicked) })
+            is HouseThing.Someone -> row.isFocusable = true
+        }
+        hints[row] = { houseThings(state.house).getOrNull(index)?.let { html(context.resources.say(hintOf(it, state.house))) } ?: "" }
+    }
+
+    /** The outlet [id] as it is now. */
+    private fun outlet(id: OutletId) = state.house.outlets.firstOrNull { it.id == id }
+
+    override fun openScreen(onCommand: (ScreenCommand) -> Unit, onClose: () -> Unit): ScreenControl? {
+        val column = column ?: return null
+        val control = skin.screenControl(onCommand, onClose, quill) ?: return null
+        screen = control
+        control.show(state.house)
+        column.cover(control.view) { control.reveal() }
+        return control
+    }
+
+    override fun closeScreen(then: () -> Unit) {
+        val control = screen ?: return then()
+        screen = null
+        control.vanish { column?.uncover(control.view) { screenRow()?.requestFocus(); then() } }
+    }
+
+    /** The screen's row of the house column, if there is one. */
+    private fun screenRow(): View? = column?.rows?.getOrNull(houseThings(state.house).indexOfFirst { it is HouseThing.Projection })
 
     private fun showApps(state: HomeState) {
         val key = (state.apps.favorites + listOf(null) + state.apps.others).map { s -> s?.let { listOf(it.app.id, it.app.label, it.isNew, it.app.artwork?.key ?: "") } ?: "|" }

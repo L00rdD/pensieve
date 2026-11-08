@@ -14,6 +14,8 @@ class FrameClock(private val fps: Int = 24) : Choreographer.FrameCallback {
 
     fun add(listener: (seconds: Float, dt: Float) -> Unit) { listeners += listener }
 
+    fun remove(listener: (seconds: Float, dt: Float) -> Unit) { listeners -= listener }
+
     fun clear() { listeners.clear() }
 
     fun start() {

@@ -9,7 +9,7 @@ import android.view.Gravity
 import android.widget.TextView
 
 /** A button drawn in ink, filled with red ink when it has the focus. */
-class InkButton(context: Context, face: Typeface, text: String, private val inkColor: Int = InkColors.INK) : TextView(context) {
+class InkButton(context: Context, face: Typeface, text: String, private val inkColor: Int = InkColors.INK, private val stroke: Float = 2f) : TextView(context) {
     private val frame = Paint(Paint.ANTI_ALIAS_FLAG)
 
     init {
@@ -31,7 +31,7 @@ class InkButton(context: Context, face: Typeface, text: String, private val inkC
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat(); val h = height.toFloat()
         if (isFocused) { frame.style = Paint.Style.FILL; frame.color = InkColors.RED; canvas.drawRect(0f, 0f, w, h, frame) }
-        else { frame.style = Paint.Style.STROKE; frame.strokeWidth = 2f; frame.color = inkColor; canvas.drawRect(1f, 1f, w - 1, h - 1, frame) }
+        else { frame.style = Paint.Style.STROKE; frame.strokeWidth = stroke; frame.color = inkColor; canvas.drawRect(stroke / 2, stroke / 2, w - stroke / 2, h - stroke / 2, frame) }
         super.onDraw(canvas)
     }
 }

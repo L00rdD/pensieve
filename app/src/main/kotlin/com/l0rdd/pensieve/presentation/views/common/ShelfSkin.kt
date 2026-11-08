@@ -58,16 +58,21 @@ interface ShelfSkin {
 
 /**
  * A look's whole house column: the time and the house, each thing of it a focusable row whose
- * OK the layout wires ([rows], in [House] order: the cinema mode, each outlet, the screen, each
- * presence). [cover] lays a screen panel in place of what is under the clock, [uncover] takes it away.
+ * OK the layout wires ([rows], in [houseThings] order: the cinema mode, each outlet, the screen,
+ * each presence; made again only when the things change, the focused one keeping the focus).
+ * [cover] lays a screen panel in place of what is under the clock, [uncover] takes it away.
  */
 interface HouseColumn {
     val view: View
     fun showTime(now: LocalDateTime)
     fun show(house: com.l0rdd.pensieve.domain.entities.house.House)
     val rows: List<View>
-    fun cover(panel: View)
-    fun uncover(panel: View)
+
+    /** Dissolves the rows (~220 ms), lays [panel] in their place, and once it is laid out [then]; the rows then hide. */
+    fun cover(panel: View, then: () -> Unit)
+
+    /** Brings the rows back and [then] (the time to give one the focus), takes [panel] away, and fades the rows in (~300 ms). */
+    fun uncover(panel: View, then: () -> Unit)
 }
 
 /** The clock at the top of the house column. */

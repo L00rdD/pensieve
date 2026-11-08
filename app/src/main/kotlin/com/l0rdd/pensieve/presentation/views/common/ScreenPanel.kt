@@ -109,13 +109,7 @@ class ScreenPanel(
 
     /** A button that sends [command] while OK is held, and stops the screen when it is let go. */
     private fun byHand(hintText: Int, label: String, command: ScreenCommand) = button(hintText, label).apply {
-        setOnKeyListener { _, keyCode, event -> isOk(keyCode) && held(event, command) }
-    }
-
-    private fun held(event: KeyEvent, command: ScreenCommand): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) onCommand(command)
-        if (event.action == KeyEvent.ACTION_UP) onCommand(ScreenCommand.STOP)
-        return true
+        movesScreenWhileHeld(command, onCommand)
     }
 
     private fun button(hintText: Int, label: String): TextView = text(label, look.text, 24f).apply {
@@ -198,7 +192,5 @@ class ScreenPanel(
         const val WIDTH = 410
         const val MARGIN = 20
         const val OPAQUE = 0xFF000000.toInt()
-
-        fun isOk(keyCode: Int) = keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
     }
 }

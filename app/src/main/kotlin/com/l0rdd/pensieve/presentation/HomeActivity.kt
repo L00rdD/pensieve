@@ -26,6 +26,8 @@ import com.l0rdd.pensieve.presentation.views.common.HomeView
 import com.l0rdd.pensieve.presentation.views.common.MenuOverlay
 import com.l0rdd.pensieve.presentation.views.common.MenuStyle
 import com.l0rdd.pensieve.presentation.views.common.NevaView
+import com.l0rdd.pensieve.presentation.views.common.ScreenControl
+import com.l0rdd.pensieve.presentation.views.common.ScreenHost
 import com.l0rdd.pensieve.presentation.views.common.ScreenPanel
 import com.l0rdd.pensieve.presentation.views.common.Stage
 import com.l0rdd.pensieve.presentation.views.common.place
@@ -47,6 +49,8 @@ class HomeActivity : ComponentActivity() {
     private var home: HomeView? = null
     private var look: Look? = null
     private var menu: View? = null
+    private var menuBack: View? = null
+    private var screen: ScreenControl? = null
     private var shownMenu: HomeMenu? = null
     private var style: MenuStyle? = null
     private val rest = Runnable { clock.stop() }
@@ -117,12 +121,13 @@ class HomeActivity : ComponentActivity() {
                 it.root.post { it.focusDefault() }
             }
             style = (home as? MenuStyled)?.menuStyle
-            shownMenu = null; menu = null
+            shownMenu = null; menu = null; menuBack = null; screen = null
         } else {
             home?.render(state)
         }
         showMenu(state.menu)
         (menu as? ScreenPanel)?.show(state.house)
+        screen?.show(state.house)
     }
 
     /** Opens the menu in the state, over what had the focus, which gets it back when the menu closes. */
@@ -130,13 +135,31 @@ class HomeActivity : ComponentActivity() {
         if (wanted == shownMenu) return
         shownMenu = wanted
         val focused = currentFocus
-        val back = menu?.tag as? View
-        menu?.let { layer.removeView(it) }
-        menu = null
-        if (wanted == null) { back?.requestFocus(); return }
+        foldMenu()
         val look = style ?: return
-        menu = if (wanted == HomeMenu.CommandScreen) screenPanel(look, focused) else listMenu(look, wanted)
-        menu?.tag = focused
+        if (wanted == null) return
+        menu = if (wanted == HomeMenu.CommandScreen) commandScreen(look, focused) else listMenu(look, wanted)
+        menuBack = focused
+    }
+
+    /** Takes the open menu away, and gives the focus back to what had it. */
+    private fun foldMenu() {
+        val back = menuBack
+        menu?.let { layer.removeView(it) }
+        menu = null; menuBack = null
+        if (screen == null) back?.requestFocus() else foldScreen(back)
+    }
+
+    /** The look's own screen panel vanishes; its home puts the focus back on the screen's row, or else [back] has it. */
+    private fun foldScreen(back: View?) {
+        screen = null
+        (home as? ScreenHost)?.closeScreen { if (currentFocus == null) back?.requestFocus() }
+    }
+
+    /** The look lays its own screen panel when it has one ([ScreenHost]); otherwise [ScreenPanel] unfolds over [tile]. */
+    private fun commandScreen(look: MenuStyle, tile: View?): View? {
+        screen = (home as? ScreenHost)?.openScreen({ viewModel.dispatch(HomeEvent.ScreenCommanded(it)) }, { viewModel.dispatch(HomeEvent.MenuClosed) })
+        return if (screen == null) screenPanel(look, tile) else null
     }
 
     private fun screenPanel(look: MenuStyle, tile: View?) =

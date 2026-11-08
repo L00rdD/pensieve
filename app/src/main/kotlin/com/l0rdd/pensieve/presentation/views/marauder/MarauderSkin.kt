@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.l0rdd.pensieve.R
 import com.l0rdd.pensieve.domain.entities.apps.ShelvedApp
+import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.presentation.strategies.HomeViewTools
 import com.l0rdd.pensieve.presentation.views.common.ActionTile
 import com.l0rdd.pensieve.presentation.views.common.AppTile
@@ -23,7 +24,9 @@ import com.l0rdd.pensieve.presentation.views.common.ArtworkDrawing
 import com.l0rdd.pensieve.presentation.views.common.ClockPanel
 import com.l0rdd.pensieve.presentation.views.common.FrenchTime
 import com.l0rdd.pensieve.presentation.views.common.HeroPanel
+import com.l0rdd.pensieve.presentation.views.common.HouseColumn
 import com.l0rdd.pensieve.presentation.views.common.MenuStyle
+import com.l0rdd.pensieve.presentation.views.common.Saying
 import com.l0rdd.pensieve.presentation.views.common.ShelfSkin
 import java.time.LocalDateTime
 
@@ -77,6 +80,13 @@ class MarauderSkin(private val tools: HomeViewTools) : ShelfSkin {
             date.text = FrenchTime.longDate(now)
         }
     }
+
+    /** The Weasleys' clock, with the Time-Turner behind it, over the hands' legend. */
+    override fun house(): HouseColumn = WeasleyColumn(tools, label(context.getString(R.string.house), null))
+
+    /** The screen's panel as a Gazette insert, cast out of the parchment ([MarauderScreenControl]). */
+    override fun screenControl(onCommand: (ScreenCommand) -> Unit, onClose: () -> Unit, saying: Saying) =
+        MarauderScreenControl(context, fonts, tools.clock, onCommand, onClose, saying)
 
     override fun hero(): HeroPanel = GazetteHero(context, fonts, tools.clock, context.getString(R.string.mm_gazette), context.getString(R.string.mm_special), context.getString(R.string.nothing_to_resume))
 

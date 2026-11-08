@@ -41,6 +41,31 @@
     <string name="screen_hint_down"><b>OK maintenu</b> l\'écran descend tant que tu tiens</string>
     <string name="screen_hint_rolled" formatted="false"><b>OK</b> il est vraiment remonté : le hub prend 0 %, rien ne bouge</string>
     <string name="screen_hint_open" formatted="false"><b>OK</b> il est vraiment ouvert : le hub prend 100 %, rien ne bouge</string>
+    <!-- the Weasleys' clock -->
+    <string name="weasley_peril">PÉRIL MORTEL</string>
+    <string name="weasley_case_show">SÉANCE</string>
+    <string name="weasley_case_light">LUMIÈRE</string>
+    <string name="weasley_case_dim">PÉNOMBRE</string>
+    <string name="weasley_case_rolled">REMONTÉ</string>
+    <string name="weasley_case_on_the_way">EN CHEMIN</string>
+    <string name="weasley_case_open">OUVERT</string>
+    <string name="weasley_case_away">AILLEURS</string>
+    <string name="weasley_case_desk">AU BUREAU</string>
+    <string name="weasley_case_interval">ENTRACTE</string>
+    <string name="weasley_unreachable">le hub ne répond plus</string>
+    <string name="weasley_show">séance en cours</string>
+    <string name="weasley_interval">entracte</string>
+    <string name="weasley_scheduled">%1$s · ⏲ %2$s</string>
+    <string name="weasley_switch_on_at">s\'allume à %1$s</string>
+    <string name="weasley_switch_off_at">s\'éteint à %1$s</string>
+    <string name="weasley_follows">%1$s · suit le %2$s</string>
+    <string name="weasley_someone">quelqu\'un y est</string>
+    <string name="weasley_empty">vide</string>
+    <string name="weasley_empty_since">vide depuis %1$d min</string>
+    <string name="weasley_hint_scheduled">%1$s · programmé : %2$s</string>
+    <string name="weasley_hint_peril"><b>Le hub ne répond plus</b> : toutes les aiguilles filent sur péril mortel</string>
+    <string name="hint_presence">le %1$s s\'allume quand quelqu\'un s\'y assoit, s\'éteint après 15 min sans clavier ni souris</string>
+    <string name="hint_presence_alone">quelqu\'un y est tant que son clavier ou sa souris bougent</string>
     <string name="unreachable">HORS LIGNE</string>
     <string name="badge_new">NOUVEAU</string>
     <string name="store">Play Store</string>
@@ -115,4 +140,16 @@
     <string name="mm_special">Édition spéciale</string>
     <string name="mm_inscription">JE MARQUE LES HEURES, UNE À UNE · ET JAMAIS NE DEVANCE LE SOLEIL · MON PRIX EST CE QUE TU EN FAIS ·</string>
     <string name="mm_mischief">« Méfait accompli » : le néon s\'éteint, l\'écran descend</string>
+    <!-- the Marauder's screen panel -->
+    <string name="mm_screen_unreachable">injoignable</string>
+    <string name="mm_screen_at">arrêté à %1$d %%</string>
+    <string name="mm_screen_lowering">descend…</string>
+    <string name="mm_screen_raising">monte…</string>
+    <string name="mm_screen_lowering_to">descend… vers %1$d %%</string>
+    <string name="mm_screen_raising_to">monte… vers %1$d %%</string>
+    <string name="mm_screen_auto">auto, jusqu’au bout</string>
+    <string name="mm_screen_by_hand">à la main <small>· tant que OK est tenu</small></string>
+    <string name="mm_screen_is">il est vraiment <small>· rien ne bouge</small></string>
+    <string name="mm_screen_seance">séance</string>
+    <string name="mm_screen_mischief">« Méfait accompli. »</string>
 </resources>
