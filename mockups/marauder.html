@@ -377,18 +377,26 @@ function showHouse() {
     const cinema = actionTile(); cinema.el.dataset.hint = '<b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer';
     cinema.el.onok = () => { HOUSE.cinema = !HOUSE.cinema; HOUSE.outlets.forEach(o => o.on = !HOUSE.cinema && o.name === 'Néon'); moveScreen(HOUSE.cinema); showHouse(); };
     HOUSE.outlets.forEach(o => { const t = actionTile(); t.el.dataset.hint = '<b>OK</b> allumer ou éteindre'; t.el.onok = () => { o.on = !o.on; showHouse(); }; });
-    const s = actionTile(); s.el.dataset.hint = "<b>OK</b> monter ou descendre l'écran"; s.el.onok = () => moveScreen(!HOUSE.screen.down);
+    const s = actionTile(); s.el.dataset.hint = "<b>OK</b> monter ou descendre l'écran · <b>OK long</b> arrêter, ou dire où il est"; s.el.onok = () => moveScreen(!HOUSE.screen.down);
+    s.el.onheld = () => openMenu('Écran de projection', [
+      ['▲ Remonter', () => moveScreen(false)], ['■ Arrêter', stopScreen], ['▼ Baisser', () => moveScreen(true)],
+      ['= Il est remonté', () => declareScreen(false)], ['= Il est ouvert', () => declareScreen(true)]]);
   }
   houseTiles[0].show('Mode cinéma', 'lampes éteintes, écran en bas', HOUSE.cinema ? 'ON' : '', '◐');
   HOUSE.outlets.forEach((o, i) => houseTiles[1 + i].show(o.name, o.on ? 'allumé' : 'éteint', o.on ? 'ON' : 'OFF', '✦'));
   const sc = HOUSE.screen;
   houseTiles.at(-1).show('Écran', 'projection', sc.moving ? 'EN ROUTE' : sc.down ? '▼ BAS' : '▲ HAUT', '▤');
 }
+let screenTimer = null;
 function moveScreen(down) {
   if (HOUSE.screen.down === down) return;
   HOUSE.screen.moving = true; showHouse();
-  setTimeout(() => { HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }, 2200);
+  screenTimer = setTimeout(() => { HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }, 2200);
 }
+// the hub stops the screen where it is; the mockup keeps it where it was going from
+function stopScreen() { clearTimeout(screenTimer); HOUSE.screen.moving = null; showHouse(); }
+// the screen really is there: the hub takes it, nothing moves
+function declareScreen(down) { clearTimeout(screenTimer); HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }
 
 /* ---------- the rooms of the castle ---------- */
 function room(app, big) {
@@ -505,6 +513,7 @@ function ok(el) {
   flash(el);
 }
 function held(el) {
+  if (el.onheld) return el.onheld();
   if (el.id === 'gear') return openMenu("Look de l'accueil", [['J.A.R.V.I.S.'], ['Cyberpunk'], ['La Carte du Maraudeur']]);
   if (el.classList.contains('room')) {
     const fav = !!el.closest('#favorites');
