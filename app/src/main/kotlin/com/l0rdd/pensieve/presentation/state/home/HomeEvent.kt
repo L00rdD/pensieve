@@ -16,7 +16,6 @@ sealed interface HomeEvent {
     data object CinemaPicked : HomeEvent
     data class OutletPicked(val outlet: Outlet) : HomeEvent
     data object ScreenPicked : HomeEvent
-    data object ScreenHeld : HomeEvent
     data class ScreenCommanded(val command: ScreenCommand) : HomeEvent
     data object SettingsPicked : HomeEvent
     data object SettingsHeld : HomeEvent

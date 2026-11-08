@@ -5,6 +5,7 @@ import com.l0rdd.pensieve.data.mappers.HubStatusMapper
 import com.l0rdd.pensieve.data.models.HubStatusModel
 import com.l0rdd.pensieve.domain.entities.house.House
 import com.l0rdd.pensieve.domain.entities.house.OutletId
+import com.l0rdd.pensieve.domain.entities.house.ScreenMove
 import com.l0rdd.pensieve.domain.repositories.HouseRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,10 @@ class HubHouseRepository(
 
     override suspend fun moveScreen(position: Int) {
         command("""{"position": $position}""")
+    }
+
+    override suspend fun pressScreen(way: ScreenMove) {
+        command("""{"press": "${way.name.lowercase()}"}""")
     }
 
     override suspend fun stopScreen() {

@@ -16,7 +16,7 @@ class HubStatusMapper(private val cinemaOutlets: Set<String>, private val screen
                 "up" -> ScreenMove.UP
                 "down" -> ScreenMove.DOWN
                 else -> null
-            })
+            }, it.target?.coerceIn(Screen.UP, Screen.DOWN))
         },
         reachable = true,
     )

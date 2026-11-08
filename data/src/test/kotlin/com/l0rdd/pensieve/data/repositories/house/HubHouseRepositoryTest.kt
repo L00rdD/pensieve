@@ -3,6 +3,7 @@ package com.l0rdd.pensieve.data.repositories.house
 import com.l0rdd.pensieve.data.fakes.FakeHttpDataSource
 import com.l0rdd.pensieve.data.mappers.HubStatusMapper
 import com.l0rdd.pensieve.domain.entities.house.OutletId
+import com.l0rdd.pensieve.domain.entities.house.ScreenMove
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -32,11 +33,13 @@ class HubHouseRepositoryTest {
         val repo = repository(http)
         repo.switchOutlet(OutletId("basketball-neon"), false)
         repo.moveScreen(100)
+        repo.pressScreen(ScreenMove.UP)
         repo.stopScreen()
         repo.declareScreen(0)
         assertEquals(listOf(
             "$hub/api/outlets/basketball-neon" to """{"on": false}""",
             "$hub/api/covers/screen" to """{"position": 100}""",
+            "$hub/api/covers/screen" to """{"press": "up"}""",
             "$hub/api/covers/screen" to """{"stop": true}""",
             "$hub/api/covers/screen" to """{"declare": 0}""",
         ), http.posted)

@@ -3,6 +3,7 @@ package com.l0rdd.pensieve.presentation
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
@@ -13,7 +14,6 @@ import com.l0rdd.pensieve.PensieveApplication
 import com.l0rdd.pensieve.R
 import com.l0rdd.pensieve.dependency_injector.injectHome
 import com.l0rdd.pensieve.dependency_injector.injectHomeViews
-import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.presentation.state.home.Arrange
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
@@ -26,6 +26,7 @@ import com.l0rdd.pensieve.presentation.views.common.HomeView
 import com.l0rdd.pensieve.presentation.views.common.MenuOverlay
 import com.l0rdd.pensieve.presentation.views.common.MenuStyle
 import com.l0rdd.pensieve.presentation.views.common.NevaView
+import com.l0rdd.pensieve.presentation.views.common.ScreenPanel
 import com.l0rdd.pensieve.presentation.views.common.Stage
 import com.l0rdd.pensieve.presentation.views.common.place
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var views: HomeViewStrategyFactory
     private var home: HomeView? = null
     private var look: Look? = null
-    private var menu: MenuOverlay? = null
+    private var menu: View? = null
     private var shownMenu: HomeMenu? = null
     private var style: MenuStyle? = null
     private val rest = Runnable { clock.stop() }
@@ -121,28 +122,36 @@ class HomeActivity : ComponentActivity() {
             home?.render(state)
         }
         showMenu(state.menu)
+        (menu as? ScreenPanel)?.show(state.house)
     }
 
+    /** Opens the menu in the state, over what had the focus, which gets it back when the menu closes. */
     private fun showMenu(wanted: HomeMenu?) {
         if (wanted == shownMenu) return
         shownMenu = wanted
         val focused = currentFocus
+        val back = menu?.tag as? View
         menu?.let { layer.removeView(it) }
         menu = null
-        wanted ?: return
-        val overlay = MenuOverlay(this, style ?: return, onClose = { viewModel.dispatch(HomeEvent.MenuClosed) })
-        layer.addView(overlay, FrameLayout.LayoutParams(Stage.WIDTH, Stage.HEIGHT))
-        menu = overlay
-        val title = menuTitle(wanted)
-        overlay.show(title, menuEntries(wanted).map { (text, event) -> getString(text) to { viewModel.dispatch(event) } })
-        overlay.tag = focused
+        if (wanted == null) { back?.requestFocus(); return }
+        val look = style ?: return
+        menu = if (wanted == HomeMenu.CommandScreen) screenPanel(look, focused) else listMenu(look, wanted)
+        menu?.tag = focused
     }
 
-    private fun menuTitle(menu: HomeMenu): String = when (menu) {
-        is HomeMenu.ArrangeApp -> menu.label
-        HomeMenu.PickLook -> getString(R.string.look_title)
-        HomeMenu.CommandScreen -> getString(R.string.screen_title)
-    }
+    private fun screenPanel(look: MenuStyle, tile: View?) =
+        ScreenPanel(this, look, { viewModel.dispatch(HomeEvent.ScreenCommanded(it)) }, { viewModel.dispatch(HomeEvent.MenuClosed) }).also {
+            layer.addView(it, FrameLayout.LayoutParams(Stage.WIDTH, Stage.HEIGHT))
+            it.unfold(tile)
+        }
+
+    private fun listMenu(look: MenuStyle, wanted: HomeMenu) =
+        MenuOverlay(this, look, onClose = { viewModel.dispatch(HomeEvent.MenuClosed) }).also {
+            layer.addView(it, FrameLayout.LayoutParams(Stage.WIDTH, Stage.HEIGHT))
+            it.show(menuTitle(wanted), menuEntries(wanted).map { (text, event) -> getString(text) to { viewModel.dispatch(event) } })
+        }
+
+    private fun menuTitle(menu: HomeMenu): String = (menu as? HomeMenu.ArrangeApp)?.label ?: getString(R.string.look_title)
 }
 
 /** What the home screen does with a key of the remote. */
@@ -187,13 +196,7 @@ internal fun menuEntries(menu: HomeMenu): List<Pair<Int, HomeEvent>> = when (men
         R.string.look_cyberpunk to HomeEvent.LookPicked(Look.CYBERPUNK),
         R.string.look_marauder to HomeEvent.LookPicked(Look.MARAUDER),
     )
-    HomeMenu.CommandScreen -> listOf(
-        R.string.screen_raise to HomeEvent.ScreenCommanded(ScreenCommand.RAISE),
-        R.string.screen_stop to HomeEvent.ScreenCommanded(ScreenCommand.STOP),
-        R.string.screen_lower to HomeEvent.ScreenCommanded(ScreenCommand.LOWER),
-        R.string.screen_rolled_up to HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP),
-        R.string.screen_open to HomeEvent.ScreenCommanded(ScreenCommand.OPEN),
-    )
+    HomeMenu.CommandScreen -> emptyList()   // a panel of its own: ScreenPanel
 }
 
 private const val TAG = "Pensieve"

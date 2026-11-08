@@ -237,7 +237,7 @@ class JarvisHomeView(private val tools: HomeViewTools) : HomeView, MenuStyled {
         val where = context.getString(if (screen.isDown) R.string.down else R.string.up)
         val state = context.getString(screenState(house) ?: return)
         view.show("ÉCRAN", context.getString(R.string.screen_sub), "position ${screen.position} % · $where", state, "▤", screen.position / 100f)
-        view.pressable({ dispatch(HomeEvent.ScreenPicked) }, { dispatch(HomeEvent.ScreenHeld) })
+        view.pressable({ dispatch(HomeEvent.ScreenPicked) })
         says[view] = { html(context.getString(R.string.jv_say_screen, "<b>$where</b>")) }
     }
 

@@ -3,7 +3,6 @@ package com.l0rdd.pensieve.presentation
 import android.view.KeyEvent
 import com.l0rdd.pensieve.R
 import com.l0rdd.pensieve.domain.entities.apps.AppId
-import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.presentation.state.home.Arrange
 import com.l0rdd.pensieve.presentation.state.home.HomeEvent
@@ -69,13 +68,7 @@ class HomeKeysTest {
     }
 
     @Test
-    fun `the screen menu moves it, stops it, or tells the hub it is rolled up or open`() {
-        assertEquals(listOf(
-            R.string.screen_raise to HomeEvent.ScreenCommanded(ScreenCommand.RAISE),
-            R.string.screen_stop to HomeEvent.ScreenCommanded(ScreenCommand.STOP),
-            R.string.screen_lower to HomeEvent.ScreenCommanded(ScreenCommand.LOWER),
-            R.string.screen_rolled_up to HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP),
-            R.string.screen_open to HomeEvent.ScreenCommanded(ScreenCommand.OPEN),
-        ), menuEntries(HomeMenu.CommandScreen))
+    fun `the screen has a panel of its own, not a list of entries`() {
+        assertEquals(emptyList<Pair<Int, HomeEvent>>(), menuEntries(HomeMenu.CommandScreen))
     }
 }

@@ -51,7 +51,6 @@ fun injectHome(scope: AppScope): ViewModelProvider.Factory = object : ViewModelP
             loadArtwork = LoadArtwork(scope.artwork),
             observeHouse = ObserveHouse(scope.house),
             toggleOutlet = ToggleOutlet(scope.house),
-            toggleScreen = ToggleScreen(scope.house),
             commandScreen = CommandScreen(scope.house),
             toggleCinemaMode = ToggleCinemaMode(scope.house),
             observeTime = ObserveTime(scope.clock),

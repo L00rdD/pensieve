@@ -10,6 +10,6 @@ sealed interface HomeMenu {
     /** Picking the look. */
     data object PickLook : HomeMenu
 
-    /** Moving the projection screen, or telling the hub where it really is. */
+    /** The screen's tile unfolded: moving it, by the hub or by hand, or telling the hub where it really is. */
     data object CommandScreen : HomeMenu
 }

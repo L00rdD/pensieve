@@ -10,10 +10,11 @@ class HubStatusMapperTest {
     fun `cinema outlets are flagged, and the screen's move is read`() {
         val house = HubStatusMapper(setOf("basketball-neon"), "screen").toHouse(HubStatusModel(
             listOf(HubStatusModel.Outlet("basketball-neon", "Néon", true), HubStatusModel.Outlet("grow-lamp", "Grow", true)),
-            listOf(HubStatusModel.Cover("screen", "Écran", 40, "down")),
+            listOf(HubStatusModel.Cover("screen", "Écran", 40, "down", 100)),
         ))
         assertEquals(listOf(true, false), house.outlets.map { it.cinema })
         assertEquals(ScreenMove.DOWN, house.screen?.moving)
         assertEquals(40, house.screen?.position)
+        assertEquals(100, house.screen?.target)
     }
 }

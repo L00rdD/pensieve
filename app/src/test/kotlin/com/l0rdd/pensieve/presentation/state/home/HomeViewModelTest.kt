@@ -8,6 +8,7 @@ import com.l0rdd.pensieve.domain.entities.house.Outlet
 import com.l0rdd.pensieve.domain.entities.house.OutletId
 import com.l0rdd.pensieve.domain.entities.house.Screen
 import com.l0rdd.pensieve.domain.entities.house.ScreenCommand
+import com.l0rdd.pensieve.domain.entities.house.ScreenMove
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.domain.entities.resume.Resume
 import com.l0rdd.pensieve.domain.usecases.apps.HideApp
@@ -20,7 +21,6 @@ import com.l0rdd.pensieve.domain.usecases.house.CommandScreen
 import com.l0rdd.pensieve.domain.usecases.house.ObserveHouse
 import com.l0rdd.pensieve.domain.usecases.house.ToggleCinemaMode
 import com.l0rdd.pensieve.domain.usecases.house.ToggleOutlet
-import com.l0rdd.pensieve.domain.usecases.house.ToggleScreen
 import com.l0rdd.pensieve.domain.usecases.look.ChangeLook
 import com.l0rdd.pensieve.domain.usecases.look.ObserveLook
 import com.l0rdd.pensieve.domain.usecases.resume.LoadArtwork
@@ -64,7 +64,7 @@ class HomeViewModelTest {
     private fun viewModel() = HomeViewModel(HomeUseCases(
         ObserveLook(look), ChangeLook(look), ObserveHomeApps(apps, shelf), LaunchApp(apps, shelf), PinFavorite(shelf), MoveFavorite(shelf),
         HideApp(shelf), MarkAppSeen(shelf), ObserveResume(resume), ResumePlayback(resume), RestartPlayback(resume), LoadArtwork(FakeArtwork()),
-        ObserveHouse(hub), ToggleOutlet(hub), ToggleScreen(hub), CommandScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSystemScreen(system),
+        ObserveHouse(hub), ToggleOutlet(hub), CommandScreen(hub), ToggleCinemaMode(hub), ObserveTime(FakeClock(now)), OpenSystemScreen(system),
     ))
 
     @Test
@@ -132,24 +132,27 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `the house, cinema mode then the screen`() {
+    fun `cinema mode switches the lamps off and lowers the screen`() {
         val vm = viewModel()
         vm.dispatch(HomeEvent.CinemaPicked)
-        vm.dispatch(HomeEvent.ScreenPicked)
         assertEquals(listOf(neon.id to false), hub.switched)
-        assertEquals(listOf(Screen.DOWN, Screen.DOWN), hub.moved)
+        assertEquals(listOf(Screen.DOWN), hub.moved)
     }
 
     @Test
-    fun `the screen's menu opens on OK held, and a command sent closes it`() {
+    fun `the screen's tile unfolds on OK, stays open while it is commanded, and folds on BACK`() {
         val vm = viewModel()
-        vm.dispatch(HomeEvent.ScreenHeld)
+        vm.dispatch(HomeEvent.ScreenPicked)
         assertEquals(HomeMenu.CommandScreen, vm.state.value.menu)
-        vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP))
+        vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.PRESS_DOWN))
         vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.STOP))
-        assertEquals(null, vm.state.value.menu)
-        assertEquals(listOf(Screen.UP), hub.declared)
+        vm.dispatch(HomeEvent.ScreenCommanded(ScreenCommand.ROLLED_UP))
+        assertEquals(HomeMenu.CommandScreen, vm.state.value.menu)
+        assertEquals(listOf(ScreenMove.DOWN), hub.pressed)
         assertEquals(1, hub.stopped)
+        assertEquals(listOf(Screen.UP), hub.declared)
+        vm.dispatch(HomeEvent.MenuClosed)
+        assertEquals(null, vm.state.value.menu)
     }
 
     @Test

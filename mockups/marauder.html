@@ -42,6 +42,25 @@
   #date { font: 22px FellItalic, serif; color: var(--muted); margin-top: 4px; }
   #rail .label { margin: 10px 0 14px; }
   .action { height: 84px; margin-bottom: 14px; cursor: pointer; }
+  #house { position: relative; }
+
+  /* the screen's tile, unfolded over the tiles above it */
+  #screenPanel { position: absolute; left: 0; width: 410px; box-sizing: border-box; display: none; padding: 16px 22px 14px;
+    background: #f8e8c4; color: var(--news-ink); border: 1px solid var(--red); outline: 1px solid var(--red); outline-offset: -5px;
+    box-shadow: 0 -10px 26px rgba(60,25,5,.35); }
+  #screenPanel.open { display: block; }
+  #spHead { display: flex; align-items: baseline; gap: 14px; font: 23px Fell, serif; letter-spacing: .1em; color: var(--red); }
+  #spState { margin-left: auto; font: 21px FellItalic, serif; letter-spacing: 0; color: var(--muted); }
+  #spGauge { position: relative; height: 12px; margin: 10px 0 14px; border: 1px solid var(--news-ink);
+    background: repeating-linear-gradient(90deg, transparent 0 9.5%, rgba(42,22,8,.35) 9.5% 10%); }
+  #spFill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--news-ink); }
+  #spTarget { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--red); display: none; }
+  #spGauge::before, #spGauge::after { position: absolute; top: 14px; font: 15px FellItalic, serif; color: var(--muted); }
+  #spGauge::before { content: "remonté"; left: 0; } #spGauge::after { content: "ouvert"; right: 0; }
+  .spRow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .spRow .what { width: 82px; font: 19px FellItalic, serif; color: var(--muted); }
+  .spRow .ink-btn { flex: 1; height: 46px; padding: 0; font-size: 21px; --c: var(--news-ink); }
+  .spRow .ink-btn.wide { flex: 1.5; font-size: 19px; }
 
   /* page */
   #scroll { left: 510px; top: 92px; width: 1410px; height: 928px; overflow: hidden; }
@@ -107,7 +126,22 @@
       <div id="date"></div>
     </div>
     <div class="label"><span class="fleuron">❦</span><span class="title">Maison</span><span class="dash"></span></div>
-    <div id="house"></div>
+    <div id="house">
+      <div id="screenPanel">
+        <div id="spHead"><span>▤</span><span>ÉCRAN</span><span id="spState"></span></div>
+        <div id="spGauge"><div id="spFill"></div><div id="spTarget"></div></div>
+        <div class="spRow" style="margin-top:30px"><span class="what">auto</span>
+          <div class="ink-btn focusable sp" data-act="raise" data-hint="<b>OK</b> remonter l'écran jusqu'en haut">▲</div>
+          <div class="ink-btn focusable sp" data-act="stop" data-hint="<b>OK</b> arrêter l'écran là où il est">■</div>
+          <div class="ink-btn focusable sp" data-act="lower" data-hint="<b>OK</b> baisser l'écran jusqu'à la projection">▼</div></div>
+        <div class="spRow"><span class="what">à la main</span>
+          <div class="ink-btn focusable sp" data-act="up" data-hint="<b>OK maintenu</b> l'écran monte tant que tu tiens, s'arrête quand tu lâches">▲</div>
+          <div class="ink-btn focusable sp" data-act="down" data-hint="<b>OK maintenu</b> l'écran descend tant que tu tiens, s'arrête quand tu lâches">▼</div></div>
+        <div class="spRow"><span class="what">il est</span>
+          <div class="ink-btn focusable sp wide" data-act="rolled" data-hint="<b>OK</b> l'écran est vraiment remonté : le hub prend 0 %, rien ne bouge">= remonté</div>
+          <div class="ink-btn focusable sp wide" data-act="open" data-hint="<b>OK</b> l'écran est vraiment ouvert : le hub prend 100 %, rien ne bouge">= ouvert</div></div>
+      </div>
+    </div>
   </div>
 
   <div id="scroll" class="abs">
@@ -194,7 +228,7 @@ const OTHERS = [
   { label: 'VLC', bg: ['#ff8800', '#e85e00'], fg: '#fff' }, { label: 'Kodi', bg: ['#17b2e7', '#0f7fb0'], fg: '#fff' },
   { label: 'Molotov', bg: ['#111', '#222'], fg: '#fff' }, { label: 'Play Store', bg: ['#fff', '#f1f3f4'], fg: '#01875f', store: true },
 ];
-const HOUSE = { reachable: true, cinema: false, outlets: [{ name: 'Néon', on: true }, { name: 'Lampe du salon', on: false }], screen: { down: false, moving: null } };
+const HOUSE = { reachable: true, cinema: false, outlets: [{ name: 'Néon', on: true }, { name: 'Lampe du salon', on: false }], screen: { position: 0, moving: null, target: null } };
 
 /* ---------- the stage, scaled to the window ---------- */
 const stage = document.getElementById('stage');
@@ -375,28 +409,61 @@ function actionTile() {
 function showHouse() {
   if (!houseTiles.length) {
     const cinema = actionTile(); cinema.el.dataset.hint = '<b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer';
-    cinema.el.onok = () => { HOUSE.cinema = !HOUSE.cinema; HOUSE.outlets.forEach(o => o.on = !HOUSE.cinema && o.name === 'Néon'); moveScreen(HOUSE.cinema); showHouse(); };
+    cinema.el.onok = () => { HOUSE.cinema = !HOUSE.cinema; HOUSE.outlets.forEach(o => o.on = !HOUSE.cinema && o.name === 'Néon'); if (HOUSE.cinema) moveScreen(100); showHouse(); };
     HOUSE.outlets.forEach(o => { const t = actionTile(); t.el.dataset.hint = '<b>OK</b> allumer ou éteindre'; t.el.onok = () => { o.on = !o.on; showHouse(); }; });
-    const s = actionTile(); s.el.dataset.hint = "<b>OK</b> monter ou descendre l'écran · <b>OK long</b> arrêter, ou dire où il est"; s.el.onok = () => moveScreen(!HOUSE.screen.down);
-    s.el.onheld = () => openMenu('Écran de projection', [
-      ['▲ Remonter', () => moveScreen(false)], ['■ Arrêter', stopScreen], ['▼ Baisser', () => moveScreen(true)],
-      ['= Il est remonté', () => declareScreen(false)], ['= Il est ouvert', () => declareScreen(true)]]);
+    const s = actionTile(); s.el.dataset.hint = "<b>OK</b> monter, descendre, arrêter l'écran, ou dire où il est";
+    s.el.onok = s.el.onheld = () => unfoldScreen(s.el);
   }
   houseTiles[0].show('Mode cinéma', 'lampes éteintes, écran en bas', HOUSE.cinema ? 'ON' : '', '◐');
   HOUSE.outlets.forEach((o, i) => houseTiles[1 + i].show(o.name, o.on ? 'allumé' : 'éteint', o.on ? 'ON' : 'OFF', '✦'));
   const sc = HOUSE.screen;
-  houseTiles.at(-1).show('Écran', 'projection', sc.moving ? 'EN ROUTE' : sc.down ? '▼ BAS' : '▲ HAUT', '▤');
+  houseTiles.at(-1).show('Écran', 'projection', sc.moving ? 'EN ROUTE' : sc.position <= 0 ? '▲ HAUT' : sc.position >= 100 ? '▼ BAS' : sc.position + ' %', '▤');
+  showScreenPanel();
 }
-let screenTimer = null;
-function moveScreen(down) {
-  if (HOUSE.screen.down === down) return;
-  HOUSE.screen.moving = true; showHouse();
-  screenTimer = setTimeout(() => { HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }, 2200);
+
+/* ---------- the screen: the hub reckons its position from the time it travels ---------- */
+const TRAVEL_S = 4;   // 38 s on the real screen, shortened here
+const screenPanel = document.getElementById('screenPanel');
+let screenTile = null;
+function moveScreen(target) {
+  const sc = HOUSE.screen; if (sc.position === target) return;
+  Object.assign(sc, { target, moving: target > sc.position ? 'down' : 'up' }); showHouse();
 }
-// the hub stops the screen where it is; the mockup keeps it where it was going from
-function stopScreen() { clearTimeout(screenTimer); HOUSE.screen.moving = null; showHouse(); }
+// the remote's way: it goes while OK is held, stops when it is let go
+function pressScreen(way) { Object.assign(HOUSE.screen, { target: way === 'down' ? 100 : 0, moving: way }); showHouse(); }
+function stopScreen() { Object.assign(HOUSE.screen, { target: null, moving: null }); showHouse(); }
 // the screen really is there: the hub takes it, nothing moves
-function declareScreen(down) { clearTimeout(screenTimer); HOUSE.screen.moving = null; HOUSE.screen.down = down; showHouse(); }
+function declareScreen(position) { Object.assign(HOUSE.screen, { position, target: null, moving: null }); showHouse(); }
+setInterval(() => {
+  const sc = HOUSE.screen; if (!sc.moving) return;
+  const step = 100 / TRAVEL_S * .05, dir = sc.moving === 'down' ? 1 : -1;
+  sc.position = Math.round(Math.max(0, Math.min(100, sc.position + dir * step)) * 10) / 10;
+  if ((dir > 0 && sc.position >= sc.target) || (dir < 0 && sc.position <= sc.target)) { sc.position = sc.target; sc.moving = null; sc.target = null; }
+  showHouse();
+}, 50);
+function screenWords(sc) {
+  const p = Math.round(sc.position);
+  if (sc.moving) return (sc.moving === 'down' ? 'descend… ' : 'monte… ') + p + ' %' + (sc.target != null ? ' → ' + sc.target + ' %' : '');
+  return p <= 0 ? 'remonté' : p >= 100 ? 'ouvert' : p + ' %';
+}
+function showScreenPanel() {
+  const sc = HOUSE.screen;
+  document.getElementById('spState').textContent = screenWords(sc);
+  document.getElementById('spFill').style.width = sc.position + '%';
+  const t = document.getElementById('spTarget'); t.style.display = sc.target != null && sc.moving ? 'block' : 'none'; t.style.left = `calc(${sc.target}% - 1px)`;
+}
+function unfoldScreen(tile) {
+  screenTile = tile; screenPanel.classList.add('open');
+  screenPanel.style.top = (tile.offsetTop + tile.offsetHeight - screenPanel.offsetHeight) + 'px';
+  focus(screenPanel.querySelector('[data-act="lower"]'));
+}
+function foldScreen() { screenPanel.classList.remove('open'); focus(screenTile); }
+const SCREEN_ACTS = { raise: () => moveScreen(0), stop: stopScreen, lower: () => moveScreen(100), rolled: () => declareScreen(0), open: () => declareScreen(100) };
+screenPanel.querySelectorAll('.sp').forEach(b => {
+  const act = b.dataset.act;
+  if (act === 'up' || act === 'down') { b.onpress = () => pressScreen(act); b.onrelease = stopScreen; }
+  else b.onok = () => { SCREEN_ACTS[act](); flash(b); };
+});
 
 /* ---------- the rooms of the castle ---------- */
 function room(app, big) {
@@ -483,8 +550,10 @@ function focus(el) {
 function move(dir) {
   const r = layoutRect(focused), cx = r.x + r.w / 2, cy = r.y + r.h / 2;
   let best = null, bestScore = Infinity;
-  document.querySelectorAll('.focusable').forEach(el => {
+  const scope = screenPanel.classList.contains('open') ? screenPanel : document;
+  scope.querySelectorAll('.focusable').forEach(el => {
     if (el === focused) return;
+    if (scope === document && screenPanel.contains(el)) return;
     const o = layoutRect(el), ox = o.x + o.w / 2, oy = o.y + o.h / 2;
     let main, side;
     if (dir === 'ArrowRight') { if (o.x < r.x + r.w - 4) return; main = o.x - (r.x + r.w); side = Math.abs(oy - cy); }
@@ -532,16 +601,20 @@ addEventListener('keydown', e => {
     else if (e.key === 'Escape' || e.key === 'Backspace') closeMenu();
     e.preventDefault(); return;
   }
+  if (screenPanel.classList.contains('open') && (e.key === 'Escape' || e.key === 'Backspace')) { foldScreen(); e.preventDefault(); return; }
   if (e.key.startsWith('Arrow')) { move(e.key); e.preventDefault(); }
+  if (e.key === 'Enter' && focused?.onpress) { if (!e.repeat) { heldFired = true; focused.onpress(); } return; }
   if (e.key === 'Enter' && !e.repeat) { heldFired = false; holdTimer = setTimeout(() => { heldFired = true; held(focused); }, 500); }
 });
-addEventListener('keyup', e => { if (e.key === 'Enter') { clearTimeout(holdTimer); if (!heldFired && !menu.classList.contains('open')) ok(focused); } });
+addEventListener('keyup', e => { if (e.key === 'Enter' && focused?.onrelease) return focused.onrelease(); if (e.key === 'Enter') { clearTimeout(holdTimer); if (!heldFired && !menu.classList.contains('open')) ok(focused); } });
 document.querySelectorAll('.focusable').forEach(el => {
   el.addEventListener('mouseenter', () => { if (!menu.classList.contains('open')) focus(el); });
+  if (el.onpress) { el.addEventListener('mousedown', () => el.onpress()); el.addEventListener('mouseup', () => el.onrelease()); el.addEventListener('mouseleave', () => HOUSE.screen.moving && el.onrelease()); return; }
   el.addEventListener('click', () => ok(el));
   el.addEventListener('contextmenu', e => { e.preventDefault(); held(el); });
 });
 menu.addEventListener('click', e => { if (e.target === menu) closeMenu(); });
+document.addEventListener('mousedown', e => { if (screenPanel.classList.contains('open') && !screenPanel.contains(e.target)) foldScreen(); });
 
 
 /* ---------- Neva, the house's seal-point cat, as NevaView draws her ---------- */
@@ -705,6 +778,7 @@ addEventListener('keydown', e => {
 /* ---------- the frame clock ---------- */
 document.fonts.ready.then(() => {
   drawParchment(); showHouse();
+  if (location.hash === '#ecran') setTimeout(() => unfoldScreen(houseTiles.at(-1).el), 300);   // straight to the screen's tile, unfolded
   document.querySelectorAll('.room').forEach(r => r.redraw());
   let last = performance.now(), minute = -1;
   const frame = ts => {

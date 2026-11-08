@@ -21,12 +21,26 @@
     <string name="screen_down">▼ BAS</string>
     <string name="screen_up">▲ HAUT</string>
     <string name="screen_moving">EN ROUTE</string>
-    <string name="screen_title">Écran de projection</string>
-    <string name="screen_raise">▲ Remonter</string>
-    <string name="screen_stop">■ Arrêter</string>
-    <string name="screen_lower">▼ Baisser</string>
-    <string name="screen_rolled_up">= Il est remonté</string>
-    <string name="screen_open">= Il est ouvert</string>
+    <!-- the screen's tile, unfolded -->
+    <string name="screen_rolled">remonté</string>
+    <string name="screen_opened">ouvert</string>
+    <string name="screen_at">%1$d %%</string>
+    <string name="screen_lowering">descend… %1$d %%</string>
+    <string name="screen_raising">monte… %1$d %%</string>
+    <string name="screen_lowering_to">descend… %1$d %% → %2$d %%</string>
+    <string name="screen_raising_to">monte… %1$d %% → %2$d %%</string>
+    <string name="screen_auto">auto</string>
+    <string name="screen_by_hand">à la main</string>
+    <string name="screen_is">il est</string>
+    <string name="screen_is_rolled">= remonté</string>
+    <string name="screen_is_open">= ouvert</string>
+    <string name="screen_hint_raise"><b>OK</b> remonter l\'écran jusqu\'en haut</string>
+    <string name="screen_hint_stop"><b>OK</b> arrêter l\'écran là où il est</string>
+    <string name="screen_hint_lower"><b>OK</b> baisser l\'écran jusqu\'à la projection</string>
+    <string name="screen_hint_up"><b>OK maintenu</b> l\'écran monte tant que tu tiens</string>
+    <string name="screen_hint_down"><b>OK maintenu</b> l\'écran descend tant que tu tiens</string>
+    <string name="screen_hint_rolled" formatted="false"><b>OK</b> il est vraiment remonté : le hub prend 0 %, rien ne bouge</string>
+    <string name="screen_hint_open" formatted="false"><b>OK</b> il est vraiment ouvert : le hub prend 100 %, rien ne bouge</string>
     <string name="unreachable">HORS LIGNE</string>
     <string name="badge_new">NOUVEAU</string>
     <string name="store">Play Store</string>
@@ -64,7 +78,7 @@
     <string name="hint_store"><b>OK</b> ouvrir le Play Store pour ajouter une appli</string>
     <string name="hint_cinema"><b>OK</b> lampes éteintes, écran baissé · encore <b>OK</b> pour rallumer</string>
     <string name="hint_outlet"><b>OK</b> allumer ou éteindre</string>
-    <string name="hint_screen"><b>OK</b> monter ou descendre l\'écran · <b>OK long</b> arrêter, ou dire où il est</string>
+    <string name="hint_screen"><b>OK</b> monter, descendre, arrêter l\'écran, ou dire où il est</string>
 
     <!-- J.A.R.V.I.S. -->
     <string name="jv_company">STARK INDUSTRIES // HOME</string>
@@ -79,7 +93,7 @@
     <string name="jv_say_new">%1$s vient d\'être installée. Appui long pour la ranger.</string>
     <string name="jv_say_cinema">Mode cinéma : j\'éteins le néon et je descends l\'écran.</string>
     <string name="jv_say_outlet">%1$s est %2$s. OK pour basculer.</string>
-    <string name="jv_say_screen">L\'écran est %1$s. OK pour le déplacer, appui long pour le régler.</string>
+    <string name="jv_say_screen">L\'écran est %1$s. OK pour le régler.</string>
     <string name="jv_say_settings">Les paramètres du projecteur, monsieur. Réglages JMGO compris.</string>
     <string name="jv_say_store">Le Play Store, pour ajouter une application.</string>
     <string name="on">allumé</string>

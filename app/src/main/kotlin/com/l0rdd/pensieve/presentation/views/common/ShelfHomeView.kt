@@ -169,7 +169,7 @@ class ShelfHomeView(private val tools: HomeViewTools, private val skin: ShelfSki
         screenState(house)?.let { state ->
             val tile = houseTiles.last()
             tile.show(context.getString(R.string.screen), context.getString(R.string.screen_sub), context.getString(state), "▤")
-            tile.view.pressable({ dispatch(HomeEvent.ScreenPicked) }, { dispatch(HomeEvent.ScreenHeld) })
+            tile.view.pressable({ dispatch(HomeEvent.ScreenPicked) })
             hints[tile.view] = { html(context.getString(R.string.hint_screen)) }
         }
     }

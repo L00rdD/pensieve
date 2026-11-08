@@ -14,6 +14,12 @@ class ModelsTest {
     }
 
     @Test
+    fun `a moving screen's way and target`() {
+        val m = HubStatusModel.parse("""{"covers":[{"id":"screen","name":"Écran","position":40,"moving":"down","target":100}]}""")
+        assertEquals(HubStatusModel.Cover("screen", "Écran", 40, "down", 100), m.covers.single())
+    }
+
+    @Test
     fun `the feed's resume list, with nulls where the feed has none`() {
         val list = FeedResumeModel.parseList("""{"resume":[{"id":"abc","type":"movie","title":"Dune","series":null,"season":null,
             "episode":null,"year":2024,"overview":"…","genres":["Science Fiction"],"runtime":9960,"position":4324,

@@ -6,6 +6,7 @@ import com.l0rdd.pensieve.domain.entities.apps.Shelf
 import com.l0rdd.pensieve.domain.entities.common.Artwork
 import com.l0rdd.pensieve.domain.entities.house.House
 import com.l0rdd.pensieve.domain.entities.house.OutletId
+import com.l0rdd.pensieve.domain.entities.house.ScreenMove
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.domain.entities.resume.Resume
 import com.l0rdd.pensieve.domain.entities.system.SystemScreen
@@ -48,10 +49,12 @@ class FakeHouse(private val house: House) : HouseRepository {
     val switched = mutableListOf<Pair<OutletId, Boolean>>()
     val moved = mutableListOf<Int>()
     val declared = mutableListOf<Int>()
+    val pressed = mutableListOf<ScreenMove>()
     var stopped = 0
     override fun observeHouse(): Flow<House> = flowOf(house)
     override suspend fun switchOutlet(id: OutletId, on: Boolean) { switched += id to on }
     override suspend fun moveScreen(position: Int) { moved += position }
+    override suspend fun pressScreen(way: ScreenMove) { pressed += way }
     override suspend fun stopScreen() { stopped++ }
     override suspend fun declareScreen(position: Int) { declared += position }
 }
