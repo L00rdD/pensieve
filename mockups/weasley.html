@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Pensieve · La maison à l'horloge des Weasley — pistes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @font-face { font-family: Fell; src: url("../app/src/main/res/font/im_fell.ttf"), local("IM FELL English Roman"); }
+  @font-face { font-family: FellItalic; src: url("../app/src/main/res/font/im_fell_italic.ttf"), local("IM FELL English Italic"); }
+  :root { --ink: #3f210b; --muted: #74471f; --red: #9c1f12; --news-ink: #2a1608; --newsprint: #f2dfb6; }
+  html, body { margin: 0; height: 100%; background: #120a04; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; font-family: Fell, serif; color: var(--ink); }
+  #home { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; pointer-events: none; }
+  .rail { position: absolute; left: 60px; top: 108px; width: 410px; height: 900px; display: flex; flex-direction: column; }
+  #top { position: fixed; left: 0; right: 0; top: 0; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 16px; color: #e9d3a6; font: 17px/1.25 FellItalic, serif; }
+  #top .tabs { display: flex; gap: 6px; }
+  #top .tabs button { font: 22px Fell, serif; width: 48px; height: 44px; color: #e9d3a6; background: transparent; border: 1px solid #b08a52; border-radius: 6px; touch-action: manipulation; }
+  #top .tabs button.on { background: #9c1f12; border-color: #f6e7c2; color: #f6e7c2; }
+  #top .about b { font: 19px Fell, serif; color: #f6e7c2; }
+  #top .plus { color: #b9d48a; } #top .minus { color: #f0a08a; }
+
+  .clock { display: flex; flex-direction: column; align-items: center; }
+  .words { font: 34px FellItalic, serif; text-align: center; }
+  .digits { font: 16px Fell, serif; color: var(--red); letter-spacing: .2em; margin-top: 2px; }
+  .date { font: 22px FellItalic, serif; color: var(--muted); margin-top: 4px; }
+  .label { display: flex; align-items: center; margin: 10px 0 14px; }
+  .label .fleuron { font: 22px Fell, serif; }
+  .label .title { font: 25px Fell, serif; color: var(--red); letter-spacing: .16em; padding: 0 14px; text-transform: uppercase; }
+  .label .dash { flex: 1; height: 1.2px; background: repeating-linear-gradient(90deg, rgba(63,33,11,.55) 0 7px, transparent 7px 13px); }
+  .picked { height: 40px; text-align: center; font: 24px Fell, serif; letter-spacing: .1em; color: var(--red); }
+  .picked i { font: 22px FellItalic, serif; letter-spacing: 0; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 127px 127px 127px; gap: 14px; }
+  canvas { display: block; }
+
+  #hint { position: absolute; left: 60px; top: 1028px; width: 1800px; height: 40px; font: 23px FellItalic, serif; text-shadow: 0 0 8px rgba(250,225,175,.9), 0 0 4px rgba(250,225,175,.9); }
+  #hint b { font-family: Fell, serif; font-weight: normal; letter-spacing: .04em; }
+  #pad { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 10px; }
+  #pad button { font: 20px Fell, serif; min-width: 64px; padding: 10px 16px; color: #f6e7c2; background: rgba(156,31,18,.9); border: 1px solid #f6e7c2; border-radius: 6px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #pad button { white-space: nowrap; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #pad .what { white-space: nowrap; font: 17px FellItalic, serif; color: #b89a6e; align-self: center; margin-right: 2px; }
+  #pad .what.sim { margin-left: 34px; }
+  #pad button.sim { background: transparent; color: #e9d3a6; border-color: #b08a52; font-size: 18px; }
+  #pad button.sim.on { background: #9c1f12; color: #f6e7c2; }
+  .ink-btn { font: 21px Fell, serif; letter-spacing: .08em; padding: 8px 24px; color: var(--c, var(--ink)); border: 2px solid var(--c, var(--ink));
+    background: transparent; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; transition: transform .16s; box-sizing: border-box; }
+  .ink-btn.focus { background: var(--red); border-color: var(--red); color: #f6e7c2; transform: rotate(-1deg) scale(1.05); }
+  /* the screen's panel, in place of what is under the clock: a Gazette insert, the screen drawn unrolling */
+  #screenPanel { display: none; flex: none; box-sizing: border-box; width: 410px; padding: 14px 18px 12px; position: relative;
+    background: #f8e8c4; color: var(--news-ink); border: 1px solid var(--red); outline: 1px solid var(--red); outline-offset: -5px;
+    box-shadow: 0 6px 22px rgba(60,25,5,.3); transform: rotate(-.35deg); }
+  #screenPanel.open { display: block; }
+  #screenPanel.open.pre { display: none; }
+  #ink { position: absolute; pointer-events: none; z-index: 3; }
+  #spHead { display: flex; align-items: baseline; gap: 10px; border-bottom: 3px double var(--news-ink); padding-bottom: 6px; }
+  #spHead .t { font: 24px Fell, serif; letter-spacing: .14em; color: var(--red); }
+  #spState { margin-left: auto; font: 20px FellItalic, serif; color: var(--muted); }
+  #spBody { display: flex; gap: 14px; margin-top: 10px; }
+  #spBody canvas { flex: none; }
+  #spCtl { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .spWhat { font: 17px FellItalic, serif; color: var(--muted); margin-top: 4px; }
+  .spWhat small { font-size: 14px; opacity: .8; }
+  .spRow { display: flex; gap: 8px; }
+  .spRow .ink-btn { flex: 1; height: 40px; padding: 0; font-size: 20px; --c: var(--news-ink); border-width: 1.5px; }
+  .spRow .ink-btn.wide { font-size: 17px; letter-spacing: .04em; }
+  #spHint { margin-top: 10px; padding-top: 6px; border-top: 1px solid rgba(42,22,8,.35); min-height: 2.4em; font: 17px/1.22 FellItalic, serif; opacity: .9; }
+  #spHint b { font-family: Fell, serif; font-weight: normal; }
+  #help { display: none; position: fixed; right: 12px; bottom: 10px; font: 13px -apple-system, sans-serif; color: #b89a6e; opacity: .75; }
+</style>
+</head>
+<body>
+<div id="top"><div class="tabs"></div><div class="about"></div></div>
+<div id="stage"><iframe id="home" src="marauder.html" scrolling="no"></iframe><div id="rail" class="rail"></div><div id="hint"></div></div>
+<div id="help">← ↑ ↓ → choisir un appareil · Entrée OK (maintenue : à la main) · Échap retour · B quelqu’un au bureau · P le hub ne répond plus</div>
+<div id="pad"><span class="what">télécommande</span><button data-k="ArrowLeft">◀</button><button data-k="ArrowUp">▲</button><button data-k="ArrowDown">▼</button><button data-k="ArrowRight">▶</button><button data-k="Enter">OK</button><button data-k="Escape">↩ retour</button>
+  <span class="what sim">pour tester</span><button id="desk" class="sim" data-k="b">quelqu’un au bureau</button><button id="mute" class="sim" data-k="p">le hub ne répond plus</button></div>
+
+<script>
+const INK = '#3f210b', MUTED = '#74471f', RED = '#9c1f12', NEWS_INK = '#2a1608', NEWSPRINT = '#f2dfb6', CREAM = '#f8e8c4';
+const PI = Math.PI, RAD = PI / 180;
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function hidpi(cv, w, h, k = 2) { cv.width = Math.round(w * k); cv.height = Math.round(h * k); cv.style.width = w + 'px'; cv.style.height = h + 'px'; const c = cv.getContext('2d'); c.setTransform(k, 0, 0, k, 0, 0); return c; }
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+function gold(c, x0, y0, x1, y1) {
+  const g = c.createLinearGradient(x0, y0, x1, y1);
+  ['#ffe7a3', '#b8862f', '#f6d27a', '#8f6220', '#e8b95a'].forEach((col, i) => g.addColorStop(i / 4, col));
+  return g;
+}
+
+/* ---------- the French time, as FrenchTime says it ---------- */
+const NUM = ['zéro','une','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt','vingt et une','vingt-deux','vingt-trois','vingt-quatre','vingt-cinq','vingt-six','vingt-sept','vingt-huit','vingt-neuf'];
+const masc = w => w.replace(/une$/, 'un');
+function inWords(hour, minute) {
+  let next = false, m = '';
+  if (minute === 0) {} else if (minute === 15) m = ' et quart'; else if (minute === 30) m = ' et demie';
+  else if (minute === 45) { next = true; m = ' moins le quart'; } else if (minute > 30) { next = true; m = ' moins ' + masc(NUM[60 - minute]); } else m = ' ' + masc(NUM[minute]);
+  const h = (hour + (next ? 1 : 0)) % 24;
+  return (h === 0 ? 'minuit' : h === 12 ? 'midi' : h % 12 === 1 ? 'une heure' : NUM[h % 12] + ' heures') + m;
+}
+const hm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+const longDate = d => d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/* ---------- the house, shared by every version ---------- */
+// as the hub tells it (/api/status.json): its outlets with their schedules, the screen, the desk's presence
+const HOUSE = {
+  reachable: true,
+  outlets: [
+    { id: 'terrarium', name: 'Terrarium', on: false, next: null },
+    { id: 'torii', name: 'Torii', on: true, next: { at: '23:00', on: false } },
+    { id: 'basketball-neon', name: 'Néon basket', on: false, next: null, cinema: true, presence: true },
+  ],
+  screen: { position: 0, moving: null, target: null },
+  presence: { name: 'Bureau', present: false, since: Date.now() - 36 * 60e3 },
+};
+const DEVICES = [
+  { kind: 'cinema', name: 'Mode cinéma' },
+  { kind: 'outlet', look: 'terrarium', name: 'Terrarium', outlet: 0 },
+  { kind: 'outlet', look: 'torii', name: 'Torii', outlet: 1 },
+  { kind: 'outlet', look: 'hoop', name: 'Néon basket', outlet: 2 },
+  { kind: 'screen', name: 'Écran' },
+  { kind: 'desk', name: 'Bureau' },
+];
+let picked = 0;
+const cinemaOn = () => HOUSE.outlets.filter(o => o.cinema).every(o => !o.on) && HOUSE.screen.position >= 100;
+const minutes = ms => Math.max(1, Math.round(ms / 60e3));
+
+/** The case a device's hand points to: where the Weasleys would say it is. */
+function caseOf(d) {
+  if (!HOUSE.reachable) return 'peril';
+  if (d.kind === 'cinema') return cinemaOn() ? 'seance' : 'entracte';
+  if (d.kind === 'screen') { const s = HOUSE.screen; return s.moving || (s.position > 0 && s.position < 100) ? 'chemin' : s.position >= 100 ? 'ouvert' : 'remonte'; }
+  if (d.kind === 'desk') return HOUSE.presence.present ? 'bureau' : 'ailleurs';
+  return HOUSE.outlets[d.outlet].on ? 'lumiere' : 'penombre';
+}
+function stateWords(d) {
+  if (!HOUSE.reachable) return 'le hub ne répond plus';
+  if (d.kind === 'cinema') return cinemaOn() ? 'séance en cours' : 'entracte';
+  if (d.kind === 'screen') {
+    const s = HOUSE.screen, p = Math.round(s.position);
+    if (s.moving) return (s.moving === 'down' ? 'descend… ' : 'monte… ') + p + ' %';
+    return p <= 0 ? 'remonté' : p >= 100 ? 'ouvert' : p + ' %';
+  }
+  if (d.kind === 'desk') return HOUSE.presence.present ? 'quelqu’un y est' : 'vide depuis ' + minutes(Date.now() - HOUSE.presence.since) + ' min';
+  const o = HOUSE.outlets[d.outlet];
+  return (o.on ? 'allumé' : 'éteint') + (o.next ? ` · ⏲ ${o.next.on ? 's’allume' : 's’éteint'} à ${o.next.at}` : o.presence ? ' · suit le bureau' : '');
+}
+const STAMP = d => {
+  if (!HOUSE.reachable) return 'PÉRIL';
+  if (d.kind === 'cinema') return cinemaOn() ? 'SÉANCE' : '';
+  if (d.kind === 'screen') { const s = HOUSE.screen; return s.moving ? 'EN ROUTE' : s.position <= 0 ? '▲ HAUT' : s.position >= 100 ? '▼ BAS' : Math.round(s.position) + ' %'; }
+  if (d.kind === 'desk') return HOUSE.presence.present ? 'OCCUPÉ' : 'VIDE';
+  return HOUSE.outlets[d.outlet].on ? 'ALLUMÉ' : 'ÉTEINT';
+};
+const HINTS = {
+  cinema: '<b>OK</b> néon basket éteint, écran baissé · encore <b>OK</b> pour rallumer',
+  outlet: '<b>OK</b> allumer ou éteindre',
+  screen: "<b>OK</b> monter, descendre, arrêter l'écran, ou dire où il est",
+  desk: 'le néon basket s’allume quand quelqu’un s’y assoit, s’éteint après 15 min sans clavier ni souris',
+};
+const hintOf = d => {
+  const o = d.kind === 'outlet' && HOUSE.outlets[d.outlet];
+  return HINTS[d.kind] + (o && o.next ? ` · programmé : ${o.next.on ? 's’allume' : 's’éteint'} à ${o.next.at}` : '');
+};
+
+function press(d) {
+  if (!HOUSE.reachable) return;
+  if (d.kind === 'cinema') { const on = cinemaOn(); HOUSE.outlets.filter(o => o.cinema).forEach(o => o.on = on); if (!on) moveScreen(100); }
+  else if (d.kind === 'screen') unfoldScreen();
+  else if (d.kind === 'outlet') HOUSE.outlets[d.outlet].on = !HOUSE.outlets[d.outlet].on;
+}
+/** Someone sits at the desk, or leaves it: the neon follows (15 min after leaving, 3 s here). */
+let deskTimer = null;
+function toggleDesk() {
+  const p = HOUSE.presence, neon = HOUSE.outlets.find(o => o.presence);
+  clearTimeout(deskTimer); p.present = !p.present; p.since = Date.now();
+  if (p.present) neon.on = true; else deskTimer = setTimeout(() => neon.on = false, 3000);
+}
+const TRAVEL_S = 4;   // 38 s on the real screen
+// the remote's way: it goes while OK is held, stops when it is let go
+function pressScreen(way) { Object.assign(HOUSE.screen, { target: way === 'down' ? 100 : 0, moving: way }); }
+function stopScreen() { Object.assign(HOUSE.screen, { target: null, moving: null }); }
+// the screen really is there: the hub takes it, nothing moves
+function declareScreen(position) { Object.assign(HOUSE.screen, { position, target: null, moving: null }); }
+function moveScreen(target) { const s = HOUSE.screen; if (s.position !== target) Object.assign(s, { target, moving: target > s.position ? 'down' : 'up' }); }
+setInterval(() => {
+  const s = HOUSE.screen; if (!s.moving) return;
+  const dir = s.moving === 'down' ? 1 : -1;
+  s.position = Math.max(0, Math.min(100, s.position + dir * 100 / TRAVEL_S * .05));
+  if ((dir > 0 && s.position >= s.target) || (dir < 0 && s.position <= s.target)) Object.assign(s, { position: s.target, moving: null, target: null });
+}, 50);
+
+/* ---------- the icons, engraved: each one also tells its state ---------- */
+function icon(c, d, x, y, k, ink) {
+  c.save(); c.translate(x, y); c.scale(k, k);
+  c.strokeStyle = ink; c.fillStyle = ink; c.lineWidth = 1.7; c.lineCap = 'round'; c.lineJoin = 'round';
+  const rays = (cy, r) => { for (let i = 0; i < 7; i++) { const a = (-90 + (i - 3) * 30) * RAD; c.beginPath(); c.moveTo(Math.cos(a) * r, cy + Math.sin(a) * r); c.lineTo(Math.cos(a) * (r + 4), cy + Math.sin(a) * (r + 4)); c.stroke(); } };
+  if (d.kind === 'cinema') {   // a clapperboard, shut during the show
+    const open = !cinemaOn();
+    c.strokeRect(-11, -2, 22, 13);
+    c.save(); c.translate(-11, -3); c.rotate(open ? -22 * RAD : 0); c.strokeRect(0, -5, 22, 5);
+    for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(3 + i * 5.5, -5); c.lineTo(6 + i * 5.5, 0); c.stroke(); } c.restore();
+    if (!open) { c.globalAlpha = .35; c.fillRect(-11, -2, 22, 13); }
+  } else if (d.look === 'terrarium') {   // a jar and its plant, under its grow light when on
+    const on = HOUSE.outlets[d.outlet].on;
+    c.beginPath(); c.roundRect(-10, -6, 20, 17, 4); c.stroke();
+    c.beginPath(); c.moveTo(-12, -8); c.lineTo(12, -8); c.stroke();
+    c.beginPath(); c.moveTo(0, 9); c.lineTo(0, -1); c.stroke();
+    c.beginPath(); c.ellipse(-4, 2, 4, 2, -.5, 0, 7); c.ellipse(4, -1, 4, 2, .5, 0, 7); if (on) c.fill(); else c.stroke();
+    if (on) rays(-6, 7);
+  } else if (d.look === 'torii') {   // the torii gate, lit
+    const on = HOUSE.outlets[d.outlet].on;
+    c.beginPath(); c.moveTo(-15, -10); c.quadraticCurveTo(0, -6, 15, -10); c.lineTo(14, -6); c.quadraticCurveTo(0, -3, -14, -6); c.closePath(); if (on) c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(-11, -1); c.lineTo(11, -1); c.moveTo(-8, -5); c.lineTo(-9, 12); c.moveTo(8, -5); c.lineTo(9, 12); c.moveTo(0, -5); c.lineTo(0, -1); c.stroke();
+    if (on) { c.globalAlpha = .35; c.fillRect(-7, 0, 14, 11); c.globalAlpha = 1; }
+  } else if (d.look === 'hoop') {   // a basketball hoop, in neon when on
+    const on = HOUSE.outlets[d.outlet].on;
+    c.lineWidth = on ? 2.2 : 1.4; c.strokeRect(-10, -13, 20, 11);
+    c.beginPath(); c.ellipse(0, -1, 7, 2.2, 0, 0, 7); c.stroke();
+    c.beginPath(); c.moveTo(-6, 0); c.lineTo(-4, 7); c.lineTo(4, 7); c.lineTo(6, 0); c.moveTo(-2, 1); c.lineTo(-1, 7); c.moveTo(2, 1); c.lineTo(1, 7); c.stroke();
+    c.lineWidth = 1.4; c.beginPath(); c.arc(9, 9, 4, 0, 7); if (on) c.fill(); c.stroke();
+    if (on) { c.beginPath(); c.moveTo(-13, -16); c.lineTo(-15, -18); c.moveTo(13, -16); c.lineTo(15, -18); c.moveTo(0, -16); c.lineTo(0, -19); c.stroke(); }
+  } else if (d.kind === 'desk') {   // the Marauder's footsteps: at the desk, or walking off
+    const here = HOUSE.presence.present, foot = (x, y, a, alpha) => { c.save(); c.translate(x, y); c.rotate(a); c.globalAlpha = alpha;
+      c.beginPath(); c.ellipse(0, 0, 3.2, 5.5, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, -8, 2.6, 2.4, 0, 0, 7); c.fill(); c.restore(); };
+    if (here) { c.fillRect(-13, -12, 26, 3); c.fillRect(-11, -9, 2, 8); c.fillRect(9, -9, 2, 8); foot(-4, 8, 0, 1); foot(4, 6, 0, 1); }
+    else { foot(-8, 9, .9, .5); foot(0, 3, .9, .75); foot(8, -3, .9, 1); }
+  } else {   // the screen, its sheet as far down as it is
+    const p = HOUSE.screen.position / 100;
+    c.beginPath(); c.roundRect(-13, -12, 26, 4, 2); c.fill();
+    c.beginPath(); c.moveTo(-15, -10); c.lineTo(-13, -10); c.moveTo(13, -10); c.lineTo(15, -10); c.stroke();
+    if (p > 0) { c.globalAlpha = .3; c.fillRect(-11, -8, 22, 21 * p); c.globalAlpha = 1; c.strokeRect(-11, -8, 22, 21 * p); }
+    c.beginPath(); c.moveTo(-5, -8 + 21 * p); c.lineTo(5, -8 + 21 * p); c.lineWidth = 2.4; c.stroke();
+  }
+  c.restore();
+}
+
+/* ---------- text along a ring; θ from the top, clockwise; the lower half reads the right way up ---------- */
+function arcText(c, text, cx, cy, r, theta, spacing = 1.4) {
+  const rad = theta * RAD, chars = [...text], widths = chars.map(ch => (c.measureText(ch).width + spacing) / r);
+  const total = widths.reduce((a, b) => a + b, 0), bottom = Math.cos(rad) < -.2;
+  let a = bottom ? rad + total / 2 : rad - total / 2;
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  chars.forEach((ch, i) => {
+    const mid = bottom ? a - widths[i] / 2 : a + widths[i] / 2;
+    c.save(); c.translate(cx + r * Math.sin(mid), cy - r * Math.cos(mid)); c.rotate(bottom ? mid + PI : mid); c.fillText(ch, 0, 0); c.restore();
+    a = bottom ? a - widths[i] : a + widths[i];
+  });
+}
+
+/* ---------- a hand: it springs to its angle, trembles on its way or in peril ---------- */
+class Hand {
+  constructor() { this.a = 0; this.v = 0; }
+  go(target, t, shaky) {
+    const delta = ((target - this.a + 540) % 360) - 180;
+    this.v = (this.v + delta * .09) * .74; this.a += this.v;
+    return this.a + (shaky ? Math.sin(t * 23 + this.a) * 1.6 + Math.sin(t * 37) * 1.1 : 0);
+  }
+}
+const shaky = d => !HOUSE.reachable || (d.kind === 'screen' && !!HOUSE.screen.moving);
+
+/** Where each device's hand aims: its case, the screen anywhere between up and open, hands on one case fanned out, one long one short. */
+function aims(cases, fan) {
+  const raw = DEVICES.map(d => {
+    const k = caseOf(d);
+    if (d.kind === 'screen' && k !== 'peril') return cases.remonte + (cases.ouvert - cases.remonte) * HOUSE.screen.position / 100;
+    return cases[k];
+  });
+  return raw.map((a, i) => {
+    const same = raw.map((b, j) => [b, j]).filter(([b]) => Math.abs(b - a) < fan * .8).map(([, j]) => j), rank = same.indexOf(i);
+    return { angle: a + (rank - (same.length - 1) / 2) * fan, short: rank % 2 === 1 };   // one long, one short: their medallions do not meet
+  });
+}
+
+function drawHand(c, cx, cy, angle, len, medal, d, selected) {
+  c.save(); c.translate(cx, cy); c.rotate(angle * RAD);
+  c.fillStyle = gold(c, -6, 0, 6, -len); c.strokeStyle = rgba('#5a3a0e', .8); c.lineWidth = .8;
+  c.beginPath(); c.moveTo(-5, 10); c.quadraticCurveTo(-1.5, -len * .5, -2, -len + medal); c.lineTo(2, -len + medal); c.quadraticCurveTo(1.5, -len * .5, 5, 10); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); c.ellipse(0, -len * .42, 4.5, 7, 0, 0, 7); c.fill(); c.stroke();   // a little scroll on the shaft
+  c.translate(0, -len); c.rotate(-angle * RAD);
+  if (selected) { c.shadowColor = rgba(RED, .7); c.shadowBlur = 14; }
+  c.fillStyle = CREAM; c.beginPath(); c.arc(0, 0, medal, 0, 7); c.fill(); c.shadowBlur = 0;
+  c.lineWidth = selected ? 3.5 : 3; c.strokeStyle = selected ? RED : gold(c, -medal, -medal, medal, medal); c.stroke();
+  icon(c, d, 0, 1, medal / 15, selected ? RED : NEWS_INK);
+  c.restore();
+}
+
+function boss(c, cx, cy, r) {
+  c.fillStyle = gold(c, cx - r, cy - r, cx + r, cy + r); c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill();
+  c.fillStyle = NEWS_INK; c.beginPath(); c.arc(cx, cy, r * .35, 0, 7); c.fill();
+}
+
+/* ---------- the Weasleys' clock: eight cases round the rim, one hand per thing of the house ---------- */
+const CASES = { peril: 0, seance: 40, lumiere: 75, penombre: 110, remonte: 145, chemin: 180, ouvert: 215, ailleurs: 250, bureau: 285, entracte: 320 };
+const CASE_NAMES = { peril: 'PÉRIL MORTEL', seance: 'SÉANCE', lumiere: 'LUMIÈRE', penombre: 'PÉNOMBRE', remonte: 'REMONTÉ', chemin: 'EN CHEMIN', ouvert: 'OUVERT', entracte: 'ENTRACTE', bureau: 'AU BUREAU', ailleurs: 'AILLEURS' };
+
+function weasleyFace(c, cx, cy, R, withHours, behind) {
+  c.save(); if (behind) c.globalAlpha = 0;
+  c.shadowColor = 'rgba(60,25,5,.4)'; c.shadowBlur = 18; c.shadowOffsetY = 6;
+  c.fillStyle = '#3b2410'; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill(); c.restore();   // the wooden case
+  c.strokeStyle = gold(c, cx - R, cy - R, cx + R, cy + R); c.lineWidth = 7; c.beginPath(); c.arc(cx, cy, R - 6, 0, 7); c.stroke();
+  const face = c.createRadialGradient(cx, cy - R * .2, 0, cx, cy, R);
+  face.addColorStop(0, '#fbecc8'); face.addColorStop(.7, '#efd39c'); face.addColorStop(1, '#d9b06a');
+  c.save(); c.globalAlpha = behind ? .8 : 1; c.fillStyle = face; c.beginPath(); c.arc(cx, cy, R - 10, 0, 7); c.fill(); c.restore();
+  c.strokeStyle = rgba(INK, .6); c.lineWidth = 1;
+  [R - 14, R - 40].forEach(r => { c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke(); });
+  // the cases, and gold studs between them
+  c.font = (R < 180 ? 11 : 12) + 'px Fell, serif';
+  for (const [k, theta] of Object.entries(CASES)) {
+    c.fillStyle = k === 'peril' ? RED : NEWS_INK;
+    arcText(c, CASE_NAMES[k], cx, cy, R - 27, theta, 1.2);
+    const next = Object.values(CASES).find(v => v > theta) ?? 360, s = (theta + (next - theta) / 2) * RAD; c.fillStyle = gold(c, cx - R, cy - R, cx + R, cy + R);
+    c.beginPath(); c.arc(cx + Math.sin(s) * (R - 27), cy - Math.cos(s) * (R - 27), 2.4, 0, 7); c.fill();
+  }
+  if (withHours) {
+    c.font = '15px Fell, serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    ['XII', 'III', 'VI', 'IX'].forEach((r, i) => { c.fillStyle = rgba(INK, .75); c.fillText(r, cx + Math.sin(i * PI / 2) * (R - 62), cy - Math.cos(i * PI / 2) * (R - 62)); });
+    for (let i = 0; i < 12; i++) if (i % 3) { const a = i * PI / 6; c.fillStyle = rgba(INK, .6); c.beginPath(); c.arc(cx + Math.sin(a) * (R - 62), cy - Math.cos(a) * (R - 62), 2, 0, 7); c.fill(); }
+  } else {
+    c.save(); c.globalAlpha = .1; c.fillStyle = INK; c.font = 'italic 46px FellItalic, serif'; c.textAlign = 'center'; c.fillText('W', cx, cy + R * .45); c.restore();
+  }
+}
+
+function weasleyClock(R, opts = {}) {
+  const k = opts.turner, cy = k ? Math.round(182 * k) : R + 5, size = k ? cy + Math.max(R, 180 * k) + 6 : 2 * R + 10;   // the ring's top, no chain
+  const cv = el('canvas'), c = hidpi(cv, 410, size), hands = DEVICES.map(() => new Hand()), cx = 205;
+  return { view: cv, draw(t, now) {
+    c.clearRect(0, 0, 410, size);
+    if (k) { c.save(); c.translate(cx - 200 * k, cy - 236 * k); drawTurner(c, t, now, k, false); c.restore(); }
+    weasleyFace(c, cx, cy, R, opts.hours, !!k);
+    if (opts.hours) {   // the time, under the house's hands
+      const h = (now.getHours() % 12 + now.getMinutes() / 60) * 30, m = now.getMinutes() * 6;
+      [[h, R * .38, 4], [m, R * .55, 2.5]].forEach(([a, l, w]) => { c.save(); c.translate(cx, cy); c.rotate(a * RAD);
+        c.strokeStyle = NEWS_INK; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 12); c.lineTo(0, -l); c.stroke();
+        c.beginPath(); c.moveTo(0, -l); c.lineTo(-5, -l + 9); c.lineTo(5, -l + 9); c.closePath(); c.fillStyle = NEWS_INK; c.fill(); c.restore(); });
+    }
+    const targets = aims(CASES, 13), medal = R > 180 ? 21 : 18, long = R - 62, short = R - 98;
+    const order = DEVICES.map((d, i) => i).filter(i => i !== picked).concat(picked);
+    order.forEach(i => drawHand(c, cx, cy, hands[i].go(targets[i].angle, t + i, shaky(DEVICES[i])), targets[i].short ? short : long, medal, DEVICES[i], i === picked));
+    boss(c, cx, cy, 11);
+  } };
+}
+
+/* ---------- small gauges: one Weasley dial per thing, with its own cases ---------- */
+const GAUGE_CASES = {
+  cinema: { entracte: -50, seance: 50 }, outlet: { penombre: -50, lumiere: 50 }, desk: { ailleurs: -50, bureau: 50 },
+  screen: { remonte: -64, chemin: 0, ouvert: 64 },
+};
+const TILE = 127 / 198;   // three a row
+function gauge(d, i) {
+  const cv = el('canvas'), c = hidpi(cv, 127, 103), hand = new Hand(), cx = 99, cy = 112, R = 84;
+  c.scale(TILE, TILE);
+  hand.a = -50;
+  return { view: cv, draw(t) {
+    const sel = i === picked; c.clearRect(0, 0, 198, 160);
+    c.fillStyle = sel ? CREAM : NEWSPRINT; c.fillRect(0, 0, 198, 160);
+    c.strokeStyle = sel ? RED : NEWS_INK; c.lineWidth = 1; c.strokeRect(.5, .5, 197, 159); c.strokeRect(4.5, 4.5, 189, 151);
+    // the half face
+    c.fillStyle = '#3b2410'; c.beginPath(); c.arc(cx, cy, R, PI, 2 * PI); c.closePath(); c.fill();
+    const face = c.createRadialGradient(cx, cy, 0, cx, cy, R); face.addColorStop(0, '#fbecc8'); face.addColorStop(1, '#e2bd7c');
+    c.fillStyle = face; c.beginPath(); c.arc(cx, cy, R - 6, PI, 2 * PI); c.closePath(); c.fill();
+    c.strokeStyle = gold(c, cx - R, 0, cx + R, cy); c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, R - 4, PI, 2 * PI); c.stroke();
+    c.strokeStyle = rgba(INK, .5); c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R - 30, PI, 2 * PI); c.stroke();
+    const cases = GAUGE_CASES[d.kind]; c.font = (d.kind === 'screen' ? 10.5 : 11.5) + 'px Fell, serif';
+    for (const [k, theta] of Object.entries(cases)) { c.fillStyle = caseOf(d) === k ? RED : NEWS_INK; arcText(c, CASE_NAMES[k], cx, cy, R - 18, theta, 1); }
+    let target = d.kind === 'screen' ? -64 + 128 * HOUSE.screen.position / 100 : cases[caseOf(d)];
+    if (!HOUSE.reachable) target = 105;   // fallen off its dial
+    const a = hand.go(target, t + i, shaky(d));
+    c.save(); c.translate(cx, cy); c.rotate(a * RAD); c.fillStyle = gold(c, -4, 0, 4, -R);
+    c.beginPath(); c.moveTo(-4, 0); c.quadraticCurveTo(-1, -R * .5, 0, -R + 32); c.quadraticCurveTo(1, -R * .5, 4, 0); c.fill(); c.restore();
+    c.fillStyle = CREAM; c.beginPath(); c.arc(cx, cy, 19, 0, 7); c.fill();
+    c.strokeStyle = sel ? RED : gold(c, cx - 19, cy - 19, cx + 19, cy + 19); c.lineWidth = 3; c.stroke();
+    icon(c, d, cx, cy + 1, 1.15, sel ? RED : NEWS_INK);
+    c.font = '17px FellItalic, serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = sel ? RED : MUTED;
+    c.fillText(d.name, cx, 151);
+    if (!HOUSE.reachable) stamp(c, 'PÉRIL MORTEL', cx, 62, 15);
+  } };
+}
+
+function stamp(c, text, x, y, size) {
+  c.save(); c.translate(x, y); c.rotate(-7 * RAD); c.font = size + 'px Fell, serif'; c.letterSpacing = '1.3px';
+  const w = c.measureText(text).width + 16; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillStyle = rgba(CREAM, .85); c.fillRect(-w / 2, -size, w, size * 1.7);
+  c.strokeStyle = RED; c.lineWidth = 2; c.strokeRect(-w / 2, -size, w, size * 1.7);
+  c.fillStyle = RED; c.fillText(text, -w / 2 + 8, size * .38); c.restore();
+}
+
+/* ---------- plain icon tiles ---------- */
+function iconTile(d, i) {
+  const cv = el('canvas'), c = hidpi(cv, 127, 103); c.scale(TILE, TILE);
+  return { view: cv, draw() {
+    const sel = i === picked; c.clearRect(0, 0, 198, 160);
+    c.fillStyle = sel ? CREAM : NEWSPRINT; c.fillRect(0, 0, 198, 160);
+    c.strokeStyle = sel ? RED : NEWS_INK; c.lineWidth = 1; c.strokeRect(.5, .5, 197, 159); c.strokeRect(4.5, 4.5, 189, 151);
+    icon(c, d, 99, 64, 2.6, sel ? RED : NEWS_INK);
+    const s = STAMP(d); if (s) stamp(c, s, 99, 128, 16);
+  } };
+}
+
+/* ---------- the Time-Turner, as in the Marauder's look, at any size ---------- */
+const INSCRIPTION = 'JE MARQUE LES HEURES, UNE À UNE · ET JAMAIS NE DEVANCE LE SOLEIL · MON PRIX EST CE QUE TU EN FAIS ·';
+const ROMAN = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+/** Draws the Time-Turner on [c] at scale [k], its ring centred on (200k, 236k). */
+function drawTurner(c, t, now, k, chain = true) {
+  const cx = 200, cy = 236; c.save(); c.scale(k, k);
+  const hour = now.getHours() % 12, progress = (now.getMinutes() * 60 + now.getSeconds()) / 3600, g = gold(c, 0, 60, 400, 420);
+  c.strokeStyle = g; c.lineWidth = 3;
+  if (chain) for (let i = 0; i < 6; i++) { c.beginPath(); c.ellipse(200, 8 + i * 11, i % 2 ? 3 : 6, 7, 0, 0, 7); c.stroke(); }
+  const glow = c.createRadialGradient(cx, cy, 0, cx, cy, 178); glow.addColorStop(0, rgba('#ffd27a', .5)); glow.addColorStop(1, 'rgba(255,210,122,0)');
+  c.fillStyle = glow; c.beginPath(); c.arc(cx, cy, 178, 0, 7); c.fill();
+  c.save(); c.translate(cx, cy); c.rotate(t * 4 * RAD); c.translate(-cx, -cy);
+  c.lineWidth = 26; c.beginPath(); c.arc(cx, cy, 166, 0, 7); c.stroke();
+  c.strokeStyle = '#6b4512'; c.lineWidth = 1.2; c.beginPath(); c.arc(cx, cy, 179, 0, 7); c.stroke(); c.beginPath(); c.arc(cx, cy, 153, 0, 7); c.stroke();
+  c.fillStyle = '#4a2c0c'; c.font = '15.5px Fell, serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  let a = 0; for (const ch of INSCRIPTION) { const cw = c.measureText(ch).width + 1.55;
+    c.save(); c.translate(cx + 160 * Math.cos(a), cy + 160 * Math.sin(a)); c.rotate(a + PI / 2); c.fillText(ch, 0, 0); c.restore(); a += cw / 160; }
+  c.restore();
+  c.fillStyle = rgba('#46280a', .08); c.beginPath(); c.arc(cx, cy, 146, 0, 7); c.fill();
+  c.strokeStyle = '#6b4512'; c.lineWidth = 1; c.stroke();
+  c.textAlign = 'center';
+  ROMAN.forEach((r, i) => { const an = i * PI / 6; c.fillStyle = i === hour ? RED : '#4a2c0c'; c.font = (i === hour ? 21 : 17) + 'px Fell, serif';
+    c.fillText(r, cx + Math.sin(an) * 130, cy + 6 - Math.cos(an) * 130); });
+  c.strokeStyle = g;
+  [[112, 7], [96, -11]].forEach(([radius, period]) => { c.save(); c.translate(cx, cy); c.scale(Math.cos(t / period * 2 * PI), 1); c.translate(-cx, -cy);
+    c.lineWidth = radius > 100 ? 9 : 6; c.beginPath(); c.arc(cx, cy, radius, 0, 7); c.stroke(); c.restore(); });
+  c.fillStyle = g; c.beginPath(); c.roundRect(160, 150, 80, 9, 3); c.roundRect(160, 313, 80, 9, 3); c.fill();
+  const glass = new Path2D('M167 159 L233 159 L204 234 L204 238 L233 313 L167 313 L196 238 L196 234 Z');
+  c.fillStyle = rgba('#fff6dd', .3); c.fill(glass); c.strokeStyle = '#8f6220'; c.lineWidth = 1.4; c.stroke(glass);
+  const top = 70 * (1 - progress), hw = 33 * top / 75;
+  c.fillStyle = '#d9a441'; if (top > 1) { c.beginPath(); c.moveTo(200 - hw, 234 - top); c.lineTo(200 + hw, 234 - top); c.lineTo(201, 234); c.lineTo(199, 234); c.fill(); }
+  const pile = 64 * Math.sqrt(progress), pw = 33 * (1 - pile / 75);
+  c.fillStyle = '#c98f2e'; c.beginPath(); c.moveTo(167, 313); c.lineTo(233, 313); c.lineTo(200 + pw, 313 - pile); c.quadraticCurveTo(200, 313 - pile - 6, 200 - pw, 313 - pile); c.fill();
+  c.fillStyle = '#d9a441'; for (let y = 236 + (t * 10 % 6); y < 313 - pile - 4; y += 6) c.fillRect(199.2, y, 1.6, 3);
+  c.strokeStyle = g; c.lineWidth = 3; c.beginPath(); c.moveTo(163, 159); c.lineTo(163, 313); c.moveTo(237, 159); c.lineTo(237, 313); c.stroke();
+  c.restore();
+}
+function turner(k) {
+  const cv = el('canvas'), w = 400 * k, h = 420 * k, c = hidpi(cv, w, h);
+  return { view: cv, draw(t, now) { c.clearRect(0, 0, w, h); drawTurner(c, t, now, k); } };
+}
+
+/* ---------- the screen's panel: auto, by hand while OK is held, and "it is"; BACK folds it ---------- */
+const SP_ROWS = [
+  [['raise', '▲', "<b>OK</b> remonter l'écran jusqu'en haut"], ['stop', '■', "<b>OK</b> arrêter l'écran là où il est"], ['lower', '▼', "<b>OK</b> baisser l'écran jusqu'à la projection"]],
+  [['up', '▲', "<b>OK maintenu</b> l'écran monte tant que tu tiens, s'arrête quand tu lâches"], ['down', '▼', "<b>OK maintenu</b> l'écran descend tant que tu tiens, s'arrête quand tu lâches"]],
+  [['rolled', '= remonté', "<b>OK</b> l'écran est vraiment remonté : le hub prend 0 %, rien ne bouge"], ['open', '= ouvert', "<b>OK</b> l'écran est vraiment ouvert : le hub prend 100 %, rien ne bouge"]],
+];
+const SP_WHAT = ['auto, jusqu’au bout', 'à la main <small>· tant que OK est tenu</small>', 'il est vraiment <small>· rien ne bouge</small>'];
+const SP_ACTS = { raise: () => moveScreen(0), stop: stopScreen, lower: () => moveScreen(100), rolled: () => declareScreen(0), open: () => declareScreen(100) };
+let panel = null, spAt = [0, 2], slot = [];
+/** The screen drawn as it is: its roller, the sheet down as far as it is, where it is going, swaying on its way. */
+function screenDrawing() {
+  const W = 104, H = 214, cv = el('canvas'), c = hidpi(cv, W, H), L = 172, top = 24;
+  drawers.push({ draw(t) {
+    if (!panelOpen()) return;
+    const s = HOUSE.screen, p = s.position / 100, end = top + L * p, sway = s.moving ? Math.sin(t * 7) * 1.6 : 0;
+    c.clearRect(0, 0, W, H);
+    c.strokeStyle = rgba(INK, .5); c.lineWidth = 1; c.setLineDash([3, 4]); c.strokeRect(14.5, top + .5, 75, L); c.setLineDash([]);   // where it would be, open
+    if (p > 0) {
+      const g = c.createLinearGradient(14, 0, 90, 0); [[0, '#e9cf98'], [.15, '#fbf1d8'], [.85, '#fbf1d8'], [1, '#e2c287']].forEach(([o, col]) => g.addColorStop(o, col));
+      c.fillStyle = g; c.beginPath(); c.moveTo(14, top); c.lineTo(90, top); c.lineTo(90 + sway, end); c.lineTo(14 + sway, end); c.fill();
+      c.strokeStyle = NEWS_INK; c.lineWidth = 1; c.stroke();
+      if (p > .55) { c.save(); c.globalAlpha = Math.min(1, (p - .55) * 3) * .5; c.fillStyle = NEWS_INK; c.font = '15px FellItalic, serif'; c.textAlign = 'center';
+        c.fillText('✦', 52 + sway / 2, top + L * .42); c.fillText('séance', 52 + sway / 2, top + L * .42 + 20); c.restore(); }
+    }
+    c.fillStyle = NEWS_INK; c.fillRect(11 + sway, end - 1, 82, 5);   // the hem bar and its pull ring
+    c.beginPath(); c.moveTo(52 + sway, end + 4); c.lineTo(52 + sway, end + 11); c.stroke(); c.beginPath(); c.arc(52 + sway, end + 14, 3, 0, 7); c.stroke();
+    c.fillStyle = gold(c, 4, 0, 100, 24); c.beginPath(); c.roundRect(4, 8, 96, 16, 7); c.fill();   // the roller
+    c.strokeStyle = '#6b4512'; c.lineWidth = 1; c.stroke(); c.fillStyle = '#6b4512'; c.fillRect(2, 10, 4, 12); c.fillRect(98, 10, 4, 12);
+    if (s.moving && s.target != null) {   // where it is going
+      const y = top + L * s.target / 100; c.strokeStyle = RED; c.lineWidth = 2; c.setLineDash([5, 4]);
+      c.beginPath(); c.moveTo(4, y); c.lineTo(100, y); c.stroke(); c.setLineDash([]);
+      c.fillStyle = RED; c.beginPath(); c.moveTo(0, y - 5); c.lineTo(6, y); c.lineTo(0, y + 5); c.fill();
+    }
+    c.fillStyle = s.moving ? RED : MUTED; c.font = '15px Fell, serif'; c.textAlign = 'center';
+    c.fillText(Math.round(s.position) + ' %', 52, Math.min(H - 3, end + 32));
+  } });
+  return cv;
+}
+function makePanel(rail) {
+  panel = el('div', null, `<div id="spHead"><span class="t">▤ ÉCRAN</span><span id="spState"></span></div><div id="spBody"><div id="spCtl">` +
+    SP_ROWS.map((row, r) => `<div class="spWhat">${SP_WHAT[r]}</div><div class="spRow">` +
+      row.map(([act, label], c) => `<div class="ink-btn${r === 2 ? ' wide' : ''}" data-r="${r}" data-c="${c}">${label}</div>`).join('') + '</div>').join('') +
+    '</div></div><div id="spHint"></div>');
+  panel.id = 'screenPanel';
+  panel.querySelector('#spBody').prepend(screenDrawing());
+  (slot.at(-1) ?? rail.lastChild).after(panel);
+  texts.push(() => {
+    const s = HOUSE.screen, p = Math.round(s.position);
+    panel.querySelector('#spState').textContent = !HOUSE.reachable ? 'injoignable' : s.moving ? (s.moving === 'down' ? 'descend…' : 'monte…') + (s.target != null ? ' vers ' + s.target + ' %' : '') : p <= 0 ? 'remonté' : p >= 100 ? 'ouvert' : 'arrêté à ' + p + ' %';
+  });
+}
+const panelOpen = () => panel?.classList.contains('open');
+function spFocus(r, c) {
+  r = Math.max(0, Math.min(2, r)); c = Math.max(0, Math.min(SP_ROWS[r].length - 1, c)); spAt = [r, c];
+  panel.querySelectorAll('.ink-btn').forEach(b => b.classList.toggle('focus', +b.dataset.r === r && +b.dataset.c === c));
+  panel.querySelector('#spHint').innerHTML = SP_ROWS[r][c][2];
+}
+/** The panel takes the place of what is under the clock (the legend, the tiles), and the focus goes to ▼. */
+function unfoldScreen() { if (spell) return; panel.classList.add('open', 'pre'); spFocus(0, 2); cast('open'); }
+function foldScreen() { if (spell?.kind === 'close') return; cast('close'); }
+
+/* ---------- the spell: the panel comes out of the parchment as the Marauder's Map does ---------- */
+const OATH = '« Je jure solennellement que mes intentions sont mauvaises. »', MISCHIEF = '« Méfait accompli. »';
+const DISSOLVE = 220, BLOOM = 950, INK_IN = 380, RETREAT = 520;
+let spell = null, inkCv = null, said = null;
+const clamp01 = x => Math.max(0, Math.min(1, x)), easeOut = x => 1 - (1 - x) ** 3;
+/** Ink tendrils from the drop: random walks, each with its pace, fanning down over the parchment, kept inside the panel ([w] × [h]). */
+function tendrils(ox, oy, w, h) {
+  const r = seeded(Math.floor(performance.now())), out = [];
+  for (let i = 0; i < 16; i++) {
+    let a = PI * (.05 + .9 * i / 15) + (r() - .5) * .3, x = ox, y = oy; const pts = [[x, y]], n = 30 + r() * 50;
+    for (let k = 0; k < n; k++) {
+      a += (r() - .5) * .5; x += Math.cos(a) * 7; y += Math.sin(a) * 7;
+      if (x < 6 || x > w - 6) { a = PI - a; x = Math.max(6, Math.min(w - 6, x)); }   // off the edge: back in
+      if (y > h - 6 || y < 0) { a = -a; y = Math.max(0, Math.min(h - 6, y)); }
+      pts.push([x, y]);
+    }
+    out.push({ pts, pace: .7 + r() * .6, blot: r() < .5 });
+  }
+  return out;
+}
+/** The blooming edge: a few ink blobs grow out of the drop, so the edge is never a clean circle. */
+function blooms(ox, oy) {
+  const r = seeded(7), out = [{ x: ox, y: oy, k: 1, d: 0 }];
+  for (let i = 0; i < 7; i++) { const a = PI * r(), dist = 60 + r() * 140; out.push({ x: ox + Math.cos(a) * dist, y: oy + Math.sin(a) * dist, k: .45 + r() * .3, d: .1 + r() * .35 }); }
+  return out;
+}
+function cast(kind) {
+  const ox = 205, oy = 0;   // the drop falls at the top of the panel, under the screen's hand
+  spell = { kind, t0: performance.now(), ox, oy, blobs: blooms(ox, oy), placed: false };
+  said = { text: kind === 'open' ? OATH : MISCHIEF, t0: performance.now() };
+}
+function mask(el, blobs, radius) {
+  const m = blobs.map(b => { const r = Math.max(0, radius(b)); return `radial-gradient(circle at ${b.x}px ${b.y}px, #000 ${r * .78}px, transparent ${r}px)`; }).join(',');
+  el.style.maskImage = el.style.webkitMaskImage = m;
+}
+function unmask(el) { el.style.maskImage = el.style.webkitMaskImage = ''; }
+/** The parts of the panel that ink in one after the other. */
+const parts = () => [panel.querySelector('#spHead'), panel.querySelector('#spBody canvas'), ...panel.querySelectorAll('.spWhat, .spRow'), panel.querySelector('#spHint')];
+function inkIn(el, p) { el.style.opacity = p; el.style.filter = p < 1 ? `blur(${(1 - p) * 4}px)` : ''; }
+function placeInk() {
+  if (!inkCv) { inkCv = el('canvas'); inkCv.id = 'ink'; }
+  railEl.append(inkCv); inkCv.style.left = (panel.offsetLeft - 40) + 'px'; inkCv.style.top = (panel.offsetTop - 40) + 'px';
+  if (!spell.lines) spell.lines = tendrils(spell.ox, spell.oy, panel.offsetWidth, panel.offsetHeight);
+  return hidpi(inkCv, 490, panel.offsetHeight + 80);
+}
+function drawInk(c, sp, grow, fade) {
+  c.clearRect(0, 0, 490, 1000); c.save(); c.translate(40, 40); c.strokeStyle = INK; c.fillStyle = INK; c.lineCap = 'round';
+  const drop = clamp01(grow * 5);   // the drop first
+  c.globalAlpha = .85 * fade; c.beginPath(); c.arc(sp.ox, sp.oy, 4 + 10 * drop, 0, 7); c.fill();
+  sp.lines.forEach(l => {
+    const n = Math.floor(l.pts.length * clamp01(grow * l.pace * 1.3)); if (n < 2) return;
+    for (let k = 1; k < n; k++) {
+      c.globalAlpha = .75 * fade * (1 - k / l.pts.length * .6); c.lineWidth = 2.6 * (1 - k / l.pts.length) + .5;
+      c.beginPath(); c.moveTo(...l.pts[k - 1]); c.lineTo(...l.pts[k]); c.stroke();
+    }
+    if (l.blot && n === l.pts.length) { c.beginPath(); c.arc(...l.pts[n - 1], 2.6, 0, 7); c.fill(); }
+  });
+  c.restore();
+}
+/** One frame of the spell, if one is cast. */
+function spellFrame() {
+  if (!spell) return;
+  const sp = spell, e = performance.now() - sp.t0;
+  if (sp.kind === 'open') {
+    if (e < DISSOLVE) { slot.forEach(x => inkIn(x, 1 - e / DISSOLVE)); return; }   // what was there sinks into the parchment
+    if (!sp.placed) { slot.forEach(x => { x.style.display = 'none'; inkIn(x, 1); }); panel.classList.remove('pre'); sp.ctx = placeInk(); sp.placed = true; }
+    const b = clamp01((e - DISSOLVE) / BLOOM), grow = easeOut(b);
+    mask(panel, sp.blobs, x => (grow - x.d) / (1 - x.d) * 560 * x.k);
+    parts().forEach((x, i) => inkIn(x, clamp01((e - DISSOLVE - 250 - i * 90) / INK_IN)));
+    drawInk(sp.ctx, sp, grow, 1 - clamp01((b - .55) / .45));
+    if (e > DISSOLVE + BLOOM + 9 * 90 + 100) { unmask(panel); parts().forEach(x => inkIn(x, 1)); inkCv.remove(); spell = null; }
+  } else {
+    if (!sp.placed) { sp.ctx = placeInk(); sp.placed = true; }
+    const b = clamp01(e / RETREAT), back = 1 - easeOut(b);   // the ink goes back into its drop
+    mask(panel, sp.blobs, x => back * 560 * x.k);
+    parts().forEach(x => inkIn(x, back));
+    drawInk(sp.ctx, sp, back, back);
+    if (b >= 1) {
+      panel.classList.remove('open'); unmask(panel); parts().forEach(x => inkIn(x, 1)); inkCv.remove();
+      slot.forEach(x => { x.style.display = ''; inkIn(x, 0); });
+      sp.kind = 'back'; sp.t0 = performance.now();
+    }
+  }
+  if (sp.kind === 'back') { const p = clamp01((performance.now() - sp.t0) / 300); slot.forEach(x => inkIn(x, p)); if (p >= 1) spell = null; }
+}
+/** The words of the spell, written as by a quill on the hint line, then left a moment. */
+function saying() {
+  if (!said) return null;
+  const e = performance.now() - said.t0, n = Math.floor(e / 22);
+  if (e > said.text.length * 22 + 1600) { said = null; return null; }
+  return `<i style="color:${RED}">${said.text.slice(0, n)}</i>`;
+}
+/** The remote, while the panel is open: arrows inside it, OK on a button, OK held on "by hand", BACK folds. */
+function panelKey(e, down) {
+  const [r, c] = spAt, act = SP_ROWS[r][c][0];
+  if (!down) { if (e.key === 'Enter' && (act === 'up' || act === 'down')) stopScreen(); return; }
+  if (e.key === 'ArrowLeft') spFocus(r, c - 1);
+  else if (e.key === 'ArrowRight') spFocus(r, c + 1);
+  else if (e.key === 'ArrowUp') spFocus(r - 1, Math.round(c * (SP_ROWS[r - 1]?.length - 1 || 0) / Math.max(1, SP_ROWS[r].length - 1)));
+  else if (e.key === 'ArrowDown') spFocus(r + 1, Math.round(c * (SP_ROWS[r + 1]?.length - 1 || 0) / Math.max(1, SP_ROWS[r].length - 1)));
+  else if (e.key === 'Enter') { if (e.repeat) return; if (act === 'up' || act === 'down') pressScreen(act); else SP_ACTS[act](); }
+  else if (e.key === 'Escape' || e.key === 'Backspace') foldScreen();
+}
+
+/* ---------- the parts of a rail ---------- */
+const drawers = [], texts = [];
+function timeBlock(rail, size = 34, digits = true) {
+  const words = el('div', 'words'), dig = el('div', 'digits'), date = el('div', 'date');
+  words.style.fontSize = size + 'px';
+  const box = el('div', 'clock'); box.append(words); if (digits) box.append(dig); box.append(date); rail.append(box);
+  texts.push(now => { words.textContent = inWords(now.getHours(), now.getMinutes()); dig.textContent = hm(now).replace(':', ' · '); date.textContent = longDate(now); });
+  return box;
+}
+function label(rail) { rail.append(el('div', 'label', '<span class="fleuron">❦</span><span class="title">Maison</span><span class="dash"></span>')); }
+function add(rail, part) { rail.append(part.view); drawers.push(part); return part; }
+function pickedLine(rail) {
+  const line = el('div', 'picked'); rail.append(line); slot.push(line);
+  texts.push(() => { const d = DEVICES[picked]; line.innerHTML = d.name.toUpperCase() + ' &nbsp;<i>' + stateWords(d) + '</i>'; });
+}
+/** The hands' key: each icon, its name and where it is, one line each. */
+function legend(rail) {
+  const cv = el('canvas'), c = hidpi(cv, 410, DEVICES.length * 33); rail.append(cv); slot.push(cv);
+  drawers.push({ draw() {
+    c.clearRect(0, 0, 410, DEVICES.length * 33);
+    DEVICES.forEach((d, i) => {
+      const y = i * 33 + 16.5, sel = i === picked, ink = sel ? RED : NEWS_INK;
+      if (sel) { c.strokeStyle = RED; c.lineWidth = 1; c.strokeRect(.5, y - 16, 409, 32); }
+      icon(c, d, 26, y + 1, .95, ink);
+      c.font = '20px Fell, serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = ink; c.fillText(d.name, 52, y);
+      c.font = '19px FellItalic, serif'; c.textAlign = 'right'; c.fillStyle = sel ? RED : MUTED; c.fillText(stateWords(d), 400, y);
+    });
+  } });
+}
+
+const VERSIONS = [
+  { letter: 'A', name: "L'horloge des Weasley à la place du Retourneur",
+    build(r) { timeBlock(r); label(r); add(r, weasleyClock(198)); pickedLine(r); legend(r); },
+    notes: "<span class=plus>+ la plus lisible ; une aiguille par appareil, une légende pour les relire ; 6 ou 7 aiguilles tiennent encore.</span><br><span class=minus>− le Retourneur de Temps disparaît (l'heure reste en toutes lettres, et dans l'en-tête).</span>" },
+  { letter: 'B', name: 'Le Retourneur, plus petit, et l’horloge dessous',
+    build(r) { const b = timeBlock(r, 28, false); b.prepend(add(b, turner(.58)).view); label(r); slot.push(add(r, weasleyClock(190)).view); pickedLine(r); },
+    notes: "<span class=plus>+ on garde les deux objets magiques.</span><br><span class=minus>− la colonne est pleine : pas de légende, et au-delà de 5 aiguilles les médaillons se chevauchent.</span>" },
+  { letter: 'C', name: "Une seule horloge : l'heure au centre, la maison autour",
+    build(r) { add(r, weasleyClock(198, { hours: true })); timeBlock(r, 30); label(r); legend(r); },
+    notes: "<span class=plus>+ un seul objet, très « Terrier » : elle donne l'heure et dit où en est la maison.</span><br><span class=minus>− plus chargée : aiguilles noires de l'heure et aiguilles dorées de la maison se croisent.</span>" },
+  { letter: 'C+', name: 'C, avec le Retourneur de Temps derrière', top: 90,
+    build(r) { add(r, weasleyClock(172, { hours: true, turner: 1.1 })); timeBlock(r, 30); label(r); legend(r); },
+    notes: "<span class=plus>+ l'anneau gravé du Retourneur tourne autour du cadran, son sablier coule derrière.</span><br><span class=minus>− le cadran rapetisse un peu pour lui laisser la place.</span>" },
+  { letter: 'D', name: 'Le Retourneur, et des vignettes à icône',
+    build(r) { const b = timeBlock(r); b.prepend(add(b, turner(.8)).view); label(r); const g = el('div', 'grid'); r.append(g); slot.push(g); DEVICES.forEach((d, i) => g.append(add(r, iconTile(d, i)).view)); pickedLine(r); },
+    notes: "<span class=plus>+ la plus sobre ; l'icône dit aussi l'état (le néon brille, la toile descend) ; s'étend en grille.</span><br><span class=minus>− pas d'horloge des Weasley ; le nom n'apparaît qu'au focus.</span>" },
+  { letter: 'E', name: 'Le Retourneur, et un petit cadran par appareil',
+    build(r) { const b = timeBlock(r); b.prepend(add(b, turner(.8)).view); label(r); const g = el('div', 'grid'); r.append(g); slot.push(g); DEVICES.forEach((d, i) => g.append(add(r, gauge(d, i)).view)); },
+    notes: "<span class=plus>+ chaque cadran n'a que ses cases, donc gros et lisible ; s'étend en grille comme D.</span><br><span class=minus>− moins spectaculaire que la grande horloge où toute la famille se retrouve.</span>" },
+];
+
+/* ---------- the whole home, the Marauder's mockup, with its left column swapped for a version ---------- */
+const stage = document.getElementById('stage'), railEl = document.getElementById('rail'), tabs = document.querySelector('#top .tabs'), about = document.querySelector('#top .about');
+function showVersion(i) {
+  drawers.length = 0; texts.length = 0; railEl.innerHTML = ''; slot = []; spell = null;
+  railEl.style.top = (VERSIONS[i].top ?? 108) + 'px';
+  VERSIONS[i].build(railEl); makePanel(railEl);
+  [...tabs.children].forEach((b, k) => b.classList.toggle('on', k === i));
+  about.innerHTML = `<b>${VERSIONS[i].letter} · ${VERSIONS[i].name}</b><br>` + VERSIONS[i].notes.replace('<br>', ' ');
+  location.hash = VERSIONS[i].letter;
+}
+VERSIONS.forEach((v, i) => { const b = el('button', null, v.letter); b.onclick = () => showVersion(i); tabs.append(b); });
+showVersion(Math.max(0, VERSIONS.findIndex(v => '#' + v.letter === location.hash)));
+
+// the home behind, without its own house column nor its hint line
+const home = document.getElementById('home');
+function hideHomeRail() { const d = home.contentDocument; d && ['rail', 'hint', 'help'].forEach(id => d.getElementById(id)?.style.setProperty('visibility', 'hidden')); }
+home.addEventListener('load', hideHomeRail); hideHomeRail();
+
+function fit() {
+  const top = 64, bottom = 70, s = Math.min(innerWidth / 1920, (innerHeight - top - bottom) / 1080);
+  stage.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px, ${top + (innerHeight - top - bottom - 1080 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+const hint = document.getElementById('hint');
+function frame(ms) {
+  const t = ms / 1000, now = new Date();
+  spellFrame();
+  drawers.forEach(p => p.draw(t, now)); texts.forEach(f => f(now));
+  hint.innerHTML = saying() ?? (panelOpen() ? SP_ROWS[spAt[0]][spAt[1]][2] + ' · <b>retour</b> replier' : HOUSE.reachable ? DEVICES[picked].name + ' — ' + hintOf(DEVICES[picked]) : 'Le hub ne répond plus : toutes les aiguilles filent sur <b>péril mortel</b>');
+  requestAnimationFrame(frame);
+}
+document.fonts.ready.then(() => requestAnimationFrame(frame));
+if (location.search.includes('ecran')) { picked = DEVICES.findIndex(d => d.kind === 'screen'); setTimeout(unfoldScreen, 300); }   // straight to the screen's panel
+
+// OK is held as long as the finger stays on it (the screen's "by hand" buttons)
+document.querySelectorAll('#pad button').forEach(b => {
+  b.addEventListener('pointerdown', e => { e.preventDefault(); dispatchEvent(new KeyboardEvent('keydown', { key: b.dataset.k })); });
+  const up = () => dispatchEvent(new KeyboardEvent('keyup', { key: b.dataset.k }));
+  b.addEventListener('pointerup', up); b.addEventListener('pointerleave', e => e.buttons && up());
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+addEventListener('keyup', e => { if (panelOpen()) panelKey(e, false); });
+addEventListener('keydown', e => {
+  const n = DEVICES.length;
+  if (spell && spell.kind !== 'open') { e.preventDefault(); return; }
+  if (panelOpen() && !['b', 'p'].includes(e.key.toLowerCase())) { panelKey(e, true); e.preventDefault(); return; }
+  if (e.repeat) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') picked = (picked + 1) % n;
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') picked = (picked + n - 1) % n;
+  else if (e.key === 'Enter') press(DEVICES[picked]);
+  else if (e.key.toLowerCase() === 'b') { toggleDesk(); document.getElementById('desk').classList.toggle('on', HOUSE.presence.present); }
+  else if (e.key.toLowerCase() === 'p') { HOUSE.reachable = !HOUSE.reachable; document.getElementById('mute').classList.toggle('on', !HOUSE.reachable); }
+  else return;
+  e.preventDefault();
+});
+</script>
+</body>
+</html>
