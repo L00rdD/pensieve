@@ -8,9 +8,11 @@ import com.l0rdd.pensieve.domain.entities.house.OutletId
 import com.l0rdd.pensieve.domain.entities.house.Screen
 import com.l0rdd.pensieve.domain.entities.look.Look
 import com.l0rdd.pensieve.domain.entities.scenes.Scene
+import com.l0rdd.pensieve.domain.entities.sources.Source
 import com.l0rdd.pensieve.domain.entities.system.SystemScreen
 import com.l0rdd.pensieve.domain.repositories.ProjectorRepository
 import com.l0rdd.pensieve.domain.repositories.SceneRepository
+import com.l0rdd.pensieve.domain.repositories.SourceRepository
 import com.l0rdd.pensieve.domain.usecases.apps.CloseApps
 import com.l0rdd.pensieve.domain.usecases.house.ObserveHouse
 import com.l0rdd.pensieve.domain.usecases.house.ToggleCinemaMode
@@ -19,6 +21,8 @@ import com.l0rdd.pensieve.domain.usecases.look.ChangeLook
 import com.l0rdd.pensieve.domain.usecases.look.ObserveLook
 import com.l0rdd.pensieve.domain.usecases.scenes.ApplyScene
 import com.l0rdd.pensieve.domain.usecases.scenes.ObserveScenes
+import com.l0rdd.pensieve.domain.usecases.sources.ObserveSources
+import com.l0rdd.pensieve.domain.usecases.sources.OpenSource
 import com.l0rdd.pensieve.domain.usecases.system.OpenSystemScreen
 import com.l0rdd.pensieve.presentation.state.home.FakeApps
 import com.l0rdd.pensieve.presentation.state.home.FakeHouse
@@ -52,6 +56,8 @@ class QuickPanelViewModelTest {
     private val system = FakeSystem()
     private val scenes = FakeScenes(listOf(salon, chambre))
     private val projector = FakeProjector()
+    private val ps5 = Source("hdmi/HW4", "PS5", lit = true)
+    private val sources = FakeSources(listOf(ps5))
 
     @Before fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @After fun tearDown() { Dispatchers.resetMain() }
@@ -59,14 +65,16 @@ class QuickPanelViewModelTest {
     private fun viewModel() = QuickPanelViewModel(
         ObserveLook(look), ChangeLook(look), ObserveHouse(hub), ToggleCinemaMode(hub), ToggleScreen(hub),
         OpenSystemScreen(system), ObserveScenes(scenes), ApplyScene(scenes), CloseApps(FakeApps(listOf(netflix, vlc)), projector),
+        ObserveSources(sources), OpenSource(sources),
     )
 
     @Test
-    fun `the state follows the look, the house and the rooms`() {
+    fun `the state follows the look, the house, the rooms and the sources`() {
         val state = viewModel().state.value
         assertEquals(Look.JARVIS, state.look)
         assertEquals(house, state.house)
         assertEquals(listOf(salon, chambre), state.scenes)
+        assertEquals(listOf(ps5), state.sources)
         assertFalse(state.done)
     }
 
@@ -75,6 +83,14 @@ class QuickPanelViewModelTest {
         val vm = viewModel()
         vm.dispatch(QuickPanelEvent.CloseAppsPicked)
         assertEquals(listOf(listOf(netflix.id, vlc.id)), projector.closed)
+        assertTrue(vm.state.value.done)
+    }
+
+    @Test
+    fun `a source opens and leaves the panel`() {
+        val vm = viewModel()
+        vm.dispatch(QuickPanelEvent.SourcePicked(ps5))
+        assertEquals(listOf("hdmi/HW4"), sources.opened)
         assertTrue(vm.state.value.done)
     }
 
@@ -104,6 +120,12 @@ class QuickPanelViewModelTest {
         val applied = mutableListOf<Int>()
         override fun observeScenes(): Flow<List<Scene>> = flowOf(scenes)
         override suspend fun apply(id: Int) { applied += id }
+    }
+
+    private class FakeSources(private val sources: List<Source>) : SourceRepository {
+        val opened = mutableListOf<String>()
+        override fun observeSources(): Flow<List<Source>> = flowOf(sources)
+        override suspend fun open(id: String) { opened += id }
     }
 
     private class FakeProjector : ProjectorRepository {

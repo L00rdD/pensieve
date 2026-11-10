@@ -12,6 +12,8 @@ import com.l0rdd.pensieve.domain.usecases.look.ChangeLook
 import com.l0rdd.pensieve.domain.usecases.look.ObserveLook
 import com.l0rdd.pensieve.domain.usecases.scenes.ApplyScene
 import com.l0rdd.pensieve.domain.usecases.scenes.ObserveScenes
+import com.l0rdd.pensieve.domain.usecases.sources.ObserveSources
+import com.l0rdd.pensieve.domain.usecases.sources.OpenSource
 import com.l0rdd.pensieve.domain.usecases.system.OpenSystemScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +22,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The quick panel the ⚙ key opens, in any app: the rooms saved in the projector, its screens, the
- * cinema mode, the projection screen, the look, and closing every app. Opening a screen or closing the apps closes the
+ * The quick panel the ⚙ key opens, in any app: the HDMI sources, the rooms saved in the projector, its screens, the
+ * cinema mode, the projection screen, the look, and closing every app. Opening a source or a screen, or closing the apps, closes the
  * panel, onto the home screen once the app beneath is gone; the house's toggles keep it open.
  */
 class QuickPanelViewModel(
@@ -34,6 +36,8 @@ class QuickPanelViewModel(
     private val observeScenes: ObserveScenes,
     private val applyScene: ApplyScene,
     private val closeApps: CloseApps,
+    private val observeSources: ObserveSources,
+    private val openSource: OpenSource,
 ) : ViewModel() {
     private val _state = MutableStateFlow(QuickPanelState.INITIAL)
     val state: StateFlow<QuickPanelState> = _state.asStateFlow()
@@ -42,6 +46,7 @@ class QuickPanelViewModel(
         viewModelScope.launch { runCatching { observeLook(NoParam).collect { look -> _state.update { it.copy(look = look) } } } }
         viewModelScope.launch { runCatching { observeHouse(NoParam).collect { house -> _state.update { it.copy(house = house) } } } }
         viewModelScope.launch { runCatching { observeScenes(NoParam).collect { scenes -> _state.update { it.copy(scenes = scenes) } } } }
+        viewModelScope.launch { runCatching { observeSources(NoParam).collect { sources -> _state.update { it.copy(sources = sources) } } } }
     }
 
     fun dispatch(event: QuickPanelEvent) {
@@ -54,6 +59,7 @@ class QuickPanelViewModel(
                     QuickPanelEvent.ProjectionScreenPicked -> state.house.screen?.let { toggleScreen(it) }
                     is QuickPanelEvent.ScenePicked -> applyScene(event.scene)
                     QuickPanelEvent.LookCycled -> state.look?.let { changeLook(Look.entries[(it.ordinal + 1) % Look.entries.size]) }
+                    is QuickPanelEvent.SourcePicked -> { openSource(event.source); _state.update { it.copy(done = true) } }
                     QuickPanelEvent.CloseAppsPicked -> { closeApps(NoParam); _state.update { it.copy(done = true) } }
                 }
             }

@@ -1,6 +1,7 @@
 package com.l0rdd.pensieve.presentation.state.panel
 
 import com.l0rdd.pensieve.domain.entities.scenes.Scene
+import com.l0rdd.pensieve.domain.entities.sources.Source
 import com.l0rdd.pensieve.domain.entities.system.SystemScreen
 
 /** What the user does in the quick panel. */
@@ -11,4 +12,5 @@ sealed interface QuickPanelEvent {
     data object LookCycled : QuickPanelEvent
     data class ScenePicked(val scene: Scene) : QuickPanelEvent
     data object CloseAppsPicked : QuickPanelEvent
+    data class SourcePicked(val source: Source) : QuickPanelEvent
 }

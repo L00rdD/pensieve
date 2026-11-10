@@ -9,6 +9,7 @@ import com.l0rdd.pensieve.domain.repositories.ProjectorRepository
 import com.l0rdd.pensieve.domain.repositories.ResumeRepository
 import com.l0rdd.pensieve.domain.repositories.SceneRepository
 import com.l0rdd.pensieve.domain.repositories.ShelfRepository
+import com.l0rdd.pensieve.domain.repositories.SourceRepository
 import com.l0rdd.pensieve.domain.repositories.SystemRepository
 
 /** The repositories that live as long as the app. */
@@ -23,4 +24,5 @@ class AppScope(
     val system: SystemRepository,
     val scenes: SceneRepository,
     val projector: ProjectorRepository,
+    val sources: SourceRepository,
 )

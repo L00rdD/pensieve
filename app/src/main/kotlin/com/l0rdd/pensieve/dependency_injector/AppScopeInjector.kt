@@ -3,6 +3,7 @@ package com.l0rdd.pensieve.dependency_injector
 import android.content.Context
 import com.l0rdd.pensieve.BuildConfig
 import com.l0rdd.pensieve.data.datasources.AndroidSystemSettingsDataSource
+import com.l0rdd.pensieve.data.datasources.AndroidTvInputsDataSource
 import com.l0rdd.pensieve.data.datasources.BinderJmgoMiddlewareDataSource
 import com.l0rdd.pensieve.data.datasources.PackageManagerAppsDataSource
 import com.l0rdd.pensieve.data.datasources.SharedPreferencesDataSource
@@ -19,6 +20,7 @@ import com.l0rdd.pensieve.data.repositories.projector.HubProjectorRepository
 import com.l0rdd.pensieve.data.repositories.resume.FeedResumeRepository
 import com.l0rdd.pensieve.data.repositories.resume.HttpArtworkRepository
 import com.l0rdd.pensieve.data.repositories.scenes.JmgoSceneRepository
+import com.l0rdd.pensieve.data.repositories.sources.TvInputSourceRepository
 import com.l0rdd.pensieve.data.repositories.system.AndroidSystemRepository
 import com.l0rdd.pensieve.data.repositories.time.SystemClockRepository
 import kotlinx.coroutines.CoroutineScope
@@ -57,5 +59,6 @@ fun injectAppScope(context: Context, scope: CoroutineScope = CoroutineScope(Supe
         system = AndroidSystemRepository(packages, QUICK_PANEL, app.packageName),
         scenes = JmgoSceneRepository(AndroidSystemSettingsDataSource(app), BinderJmgoMiddlewareDataSource(app)),
         projector = HubProjectorRepository(http, BuildConfig.HUB_URL, PROJECTOR),
+        sources = TvInputSourceRepository(AndroidTvInputsDataSource(app, packages)),
     )
 }
